@@ -28,6 +28,7 @@ export function Goblin({
 }: GoblinProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [spriteSheet, setSpriteSheet] = useState<string>('');
+  const [sleepSprite, setSleepSprite] = useState<string>('');
   const [idleAction, setIdleAction] = useState<'bounce' | 'wave' | null>(null);
   const [zzzParticles, setZzzParticles] = useState<number[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -39,6 +40,8 @@ export function Goblin({
   useEffect(() => {
     const spriteUrl = chrome.runtime.getURL('goblin-sprite.png');
     setSpriteSheet(spriteUrl);
+    const sleepUrl = chrome.runtime.getURL('goblin-sleep-baby.png');
+    setSleepSprite(sleepUrl);
   }, []);
 
   // Determine which animation to play
@@ -156,7 +159,8 @@ export function Goblin({
     if (mood === 'CORRUPT') classes.push('animate-shake');
     if (idleAction === 'bounce') classes.push('animate-bounce');
     if (idleAction === 'wave') classes.push('animate-wiggle');
-    if (isSleeping) classes.push('sleeping');
+    // Only rotate for non-baby sleep (we have a dedicated baby sleep sprite)
+    if (isSleeping && !(level === 1 && sleepSprite)) classes.push('sleeping');
     if (isReviving) classes.push('reviving');
     if (mood === 'DEAD' && !isReviving) classes.push('ghost');
     
@@ -189,7 +193,21 @@ export function Goblin({
         height: `${SPRITE_CELL_SIZE}px`,
       }}
     >
-      {spriteSheet && (
+      {/* Baby sleeping uses dedicated sprite (no rotation) */}
+      {isSleeping && level === 1 && sleepSprite ? (
+        <img
+          src={sleepSprite}
+          alt="Sleeping baby goblin"
+          className="goblin-sprite"
+          style={{
+            width: `${SPRITE_CELL_SIZE}px`,
+            height: `${SPRITE_CELL_SIZE}px`,
+            imageRendering: 'pixelated',
+            filter: getSpriteFilter(),
+            transition: 'filter 0.5s ease',
+          }}
+        />
+      ) : spriteSheet ? (
         <div
           className="goblin-sprite"
           style={{
@@ -203,7 +221,7 @@ export function Goblin({
             transition: 'transform 0.3s ease, filter 0.5s ease',
           }}
         />
-      )}
+      ) : null}
       
       {/* Zzz particles when sleeping */}
       {isSleeping && zzzParticles.map((id, index) => (

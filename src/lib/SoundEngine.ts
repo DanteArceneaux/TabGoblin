@@ -30,6 +30,15 @@ export class SoundEngine {
     }
   }
 
+  /**
+   * Ensure context is ready before playback when enabled
+   */
+  private resumeIfNeeded() {
+    if (!this.enabled) return false;
+    this.resume();
+    return !!this.ctx && this.ctx.state === 'running';
+  }
+
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
     if (enabled) {
@@ -50,10 +59,8 @@ export class SoundEngine {
    * Play "power on" sound - click followed by rising hum
    */
   playPowerOn() {
-    // Respect user sound toggle
-    if (!this.enabled) return;
-    this.initAudioContext();
-    if (!this.ctx) return;
+    // Respect user sound toggle and resume if needed
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
 
@@ -89,7 +96,7 @@ export class SoundEngine {
    * Pitch is slightly randomized for variety
    */
   playMunch() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -114,7 +121,7 @@ export class SoundEngine {
    * Pitch is slightly randomized
    */
   playChirp() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     const baseNotes = [440, 554, 659]; // A4, C#5, E5
@@ -142,7 +149,7 @@ export class SoundEngine {
    * Play "evolution" jingle - triumphant ascending arpeggio
    */
   playEvolution() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     // C major arpeggio going up: C4, E4, G4, C5
@@ -195,7 +202,7 @@ export class SoundEngine {
    * Play "death" sound - sad descending tone
    */
   playDeath() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     // Descending minor: E4, D4, C4
@@ -224,7 +231,7 @@ export class SoundEngine {
    * Play "revive" sound - hopeful ascending tone
    */
   playRevive() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     // Ascending: C4, E4, G4
@@ -254,7 +261,7 @@ export class SoundEngine {
    * Play "glitch" sound when goblin corrupts
    */
   playGlitch() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -278,7 +285,7 @@ export class SoundEngine {
    * Play "whimper" sound when goblin is sick
    */
   playWhimper() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -302,7 +309,7 @@ export class SoundEngine {
    * Play level up sound (shorter than evolution)
    */
   playLevelUp() {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.resumeIfNeeded() || !this.ctx) return;
 
     const now = this.ctx.currentTime;
     const notes = [523, 659]; // C5, E5
