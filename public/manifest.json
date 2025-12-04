@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Goblin",
+  "version": "0.1.0",
+  "description": "A productivity companion that lives in your browser. Feed your goblin by closing tabs!",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms",
+    "sidePanel"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Open Tab Goblin"
+  }
+}
