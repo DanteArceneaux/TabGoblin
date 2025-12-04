@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 
 interface ConsoleWrapperProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ interface ConsoleWrapperProps {
   isNight?: boolean;
 }
 
-export function ConsoleWrapper({ 
+function ConsoleWrapperComponent({ 
   children, 
   onAButton, 
   onBButton, 
@@ -121,35 +121,40 @@ export function ConsoleWrapper({
           {/* Controls Area */}
           <div className="flex justify-between items-end px-2 pb-2 relative z-10">
             
-            {/* D-Pad */}
-            <div className="w-20 h-20 relative">
-              {/* Up */}
-              <button
-                onClick={onDpadUp}
-                aria-label="D-pad Up"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:translate-y-0.5 active:shadow-[0_1px_0_#1f2937]"
-              />
-              {/* Down */}
-              <button
-                onClick={onDpadDown}
-                aria-label="D-pad Down"
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:translate-y-0.5 active:shadow-[0_1px_0_#1f2937]"
-              />
-              {/* Left */}
-              <button
-                onClick={onDpadLeft}
-                aria-label="D-pad Left"
-                className="absolute top-1/2 left-0 -translate-y-1/2 w-6 h-7 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:translate-x-0.5 active:shadow-[0_1px_0_#1f2937]"
-              />
-              {/* Right */}
-              <button
-                onClick={onDpadRight}
-                aria-label="D-pad Right"
-                className="absolute top-1/2 right-0 -translate-y-1/2 w-6 h-7 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:-translate-x-0.5 active:shadow-[0_1px_0_#1f2937]"
-              />
-              {/* Center circle */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-radial from-gray-600 to-gray-800 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" />
+          {/* D-Pad */}
+          <div className="w-20 h-20 relative">
+            {/* Base cross for unified look */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 bg-gradient-to-b from-gray-700 to-gray-800 rounded-sm shadow-[0_4px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.08)]" />
+              <div className="absolute w-6 h-16 bg-gradient-to-b from-gray-700 to-gray-800 shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.08)]" />
+              <div className="absolute w-16 h-6 bg-gradient-to-b from-gray-700 to-gray-800 shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.08)]" />
+              <div className="absolute w-5 h-5 bg-gradient-radial from-gray-500 to-gray-700 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" />
             </div>
+            {/* Up */}
+            <button
+              onClick={onDpadUp}
+              aria-label="D-pad Up"
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-transparent"
+            />
+            {/* Down */}
+            <button
+              onClick={onDpadDown}
+              aria-label="D-pad Down"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-transparent"
+            />
+            {/* Left */}
+            <button
+              onClick={onDpadLeft}
+              aria-label="D-pad Left"
+              className="absolute top-1/2 left-0 -translate-y-1/2 w-6 h-7 bg-transparent"
+            />
+            {/* Right */}
+            <button
+              onClick={onDpadRight}
+              aria-label="D-pad Right"
+              className="absolute top-1/2 right-0 -translate-y-1/2 w-6 h-7 bg-transparent"
+            />
+          </div>
 
             {/* Start/Select Buttons */}
             <div className="flex gap-4 mb-2">
@@ -211,7 +216,7 @@ export function ConsoleWrapper({
           </div>
 
           {/* Speaker Grille */}
-          <div className="absolute bottom-8 right-6 flex gap-[3px] transform -rotate-[30deg]">
+          <div className="absolute bottom-5 right-10 flex gap-[3px] transform -rotate-[35deg]">
             {[...Array(6)].map((_, i) => (
               <div 
                 key={i} 
@@ -227,3 +232,5 @@ export function ConsoleWrapper({
     </div>
   );
 }
+
+export const ConsoleWrapper = memo(ConsoleWrapperComponent);
