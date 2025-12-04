@@ -121,38 +121,35 @@ function ConsoleWrapperComponent({
           {/* Controls Area */}
           <div className="flex justify-between items-end px-2 pb-2 relative z-10">
             
-          {/* D-Pad */}
-          <div className="w-20 h-20 relative">
-            {/* Base cross for unified look */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 bg-gradient-to-b from-gray-700 to-gray-800 rounded-sm shadow-[0_4px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.08)]" />
-              <div className="absolute w-6 h-16 bg-gradient-to-b from-gray-700 to-gray-800 shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.08)]" />
-              <div className="absolute w-16 h-6 bg-gradient-to-b from-gray-700 to-gray-800 shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.08)]" />
-              <div className="absolute w-5 h-5 bg-gradient-radial from-gray-500 to-gray-700 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" />
-            </div>
-            {/* Up */}
+          {/* D-Pad - Classic + shape */}
+          <div className="w-[72px] h-[72px] relative">
+            {/* Vertical arm of cross */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-6 h-full bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)]" />
+            {/* Horizontal arm of cross */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-6 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)]" />
+            {/* Center circle */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]" />
+            
+            {/* Clickable regions (invisible, on top) */}
             <button
               onClick={onDpadUp}
               aria-label="D-pad Up"
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-transparent"
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-6 bg-transparent hover:bg-white/10 active:bg-white/20 rounded-t-sm z-10"
             />
-            {/* Down */}
             <button
               onClick={onDpadDown}
               aria-label="D-pad Down"
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-transparent"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-6 bg-transparent hover:bg-white/10 active:bg-white/20 rounded-b-sm z-10"
             />
-            {/* Left */}
             <button
               onClick={onDpadLeft}
               aria-label="D-pad Left"
-              className="absolute top-1/2 left-0 -translate-y-1/2 w-6 h-7 bg-transparent"
+              className="absolute top-1/2 left-0 -translate-y-1/2 w-6 h-6 bg-transparent hover:bg-white/10 active:bg-white/20 rounded-l-sm z-10"
             />
-            {/* Right */}
             <button
               onClick={onDpadRight}
               aria-label="D-pad Right"
-              className="absolute top-1/2 right-0 -translate-y-1/2 w-6 h-7 bg-transparent"
+              className="absolute top-1/2 right-0 -translate-y-1/2 w-6 h-6 bg-transparent hover:bg-white/10 active:bg-white/20 rounded-r-sm z-10"
             />
           </div>
 
@@ -215,12 +212,12 @@ function ConsoleWrapperComponent({
             </div>
           </div>
 
-          {/* Speaker Grille */}
-          <div className="absolute bottom-5 right-10 flex gap-[3px] transform -rotate-[35deg]">
-            {[...Array(6)].map((_, i) => (
+          {/* Speaker Grille - positioned in bottom-right corner, clear of buttons */}
+          <div className="absolute bottom-3 right-3 flex gap-[3px] transform -rotate-[30deg]">
+            {[...Array(5)].map((_, i) => (
               <div 
                 key={i} 
-                className="w-[3px] h-10 bg-gradient-to-b from-purple-900 via-purple-950 to-black rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" 
+                className="w-[2px] h-7 bg-gradient-to-b from-purple-800 via-purple-950 to-black rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" 
               />
             ))}
           </div>
