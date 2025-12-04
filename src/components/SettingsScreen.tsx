@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { GameState } from '../lib/gameState';
+import { MESSAGES } from '../lib/constants';
 
 interface SettingsScreenProps {
   gameState: GameState;
@@ -104,6 +105,13 @@ export function SettingsScreen({ gameState, onClose, onUpdate }: SettingsScreenP
           <div className="flex justify-between items-center">
             <span>FOCUS MODE</span>
             <button
+              onClick={async () => {
+                try {
+                  await chrome.runtime.sendMessage({ type: MESSAGES.TOGGLE_FOCUS_MODE });
+                } catch (error) {
+                  console.error('Failed to toggle focus mode:', error);
+                }
+              }}
               className="bg-[#306230] px-2 py-1 border-2 border-[#9bbc0f] active:translate-y-0.5"
             >
               {gameState.settings.focusModeActive ? 'ON' : 'OFF'}

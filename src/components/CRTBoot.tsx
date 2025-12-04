@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect, ReactNode } from 'react';
-import { soundEngine } from '../lib/SoundEngine';
 
 interface CRTBootProps {
   children: ReactNode;
@@ -26,23 +25,16 @@ export function CRTBoot({ children, onBootComplete, skip = false }: CRTBootProps
     // Phase 1: Start boot animation
     const startBoot = setTimeout(() => {
       setBootPhase('booting');
-      soundEngine.playPowerOn();
     }, 100);
 
-    // Phase 2: Flicker effect
-    const flickerStart = setTimeout(() => {
-      setBootPhase('flicker');
-    }, 700);
-
-    // Phase 3: Ready
+    // Phase 2: Ready (skip flicker to avoid visual blink)
     const readyStart = setTimeout(() => {
       setBootPhase('ready');
       onBootComplete?.();
-    }, 1000);
+    }, 800);
 
     return () => {
       clearTimeout(startBoot);
-      clearTimeout(flickerStart);
       clearTimeout(readyStart);
     };
   }, [skip, onBootComplete]);
@@ -62,14 +54,6 @@ export function CRTBoot({ children, onBootComplete, skip = false }: CRTBootProps
         <div className="w-full bg-[#9bbc0f] crt-boot">
           {children}
         </div>
-      </div>
-    );
-  }
-
-  if (bootPhase === 'flicker') {
-    return (
-      <div className="w-full h-full crt-flicker">
-        {children}
       </div>
     );
   }

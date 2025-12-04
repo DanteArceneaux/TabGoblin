@@ -20,6 +20,16 @@ export class SoundEngine {
     }
   }
 
+  /**
+   * Resume audio context after a user gesture (Chrome autoplay policy)
+   */
+  resume() {
+    this.initAudioContext();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
     if (enabled) {

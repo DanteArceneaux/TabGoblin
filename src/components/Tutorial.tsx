@@ -8,14 +8,15 @@ import { useState, useEffect } from 'react';
 interface TutorialProps {
   tabCount: number;
   onComplete: () => void;
-  onAButtonPressed: boolean;
+  aPressCount: number;
 }
 
 type TutorialStep = 'intro' | 'show-tabs' | 'press-a' | 'success' | 'done';
 
-export function Tutorial({ tabCount, onComplete, onAButtonPressed }: TutorialProps) {
+export function Tutorial({ tabCount, onComplete, aPressCount }: TutorialProps) {
   const [step, setStep] = useState<TutorialStep>('intro');
   const [showContent, setShowContent] = useState(false);
+  const [consumedAPresses, setConsumedAPresses] = useState(0);
 
   // Fade in content
   useEffect(() => {
@@ -37,10 +38,11 @@ export function Tutorial({ tabCount, onComplete, onAButtonPressed }: TutorialPro
 
   // React to A button press
   useEffect(() => {
-    if (step === 'press-a' && onAButtonPressed) {
+    if (step === 'press-a' && aPressCount > consumedAPresses) {
+      setConsumedAPresses(aPressCount);
       setStep('success');
     }
-  }, [onAButtonPressed, step]);
+  }, [aPressCount, consumedAPresses, step]);
 
   // Complete tutorial after success
   useEffect(() => {

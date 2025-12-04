@@ -41,7 +41,9 @@ function AppContent() {
   const [isSleeping, setIsSleeping] = useState(false);
   const [isReviving, setIsReviving] = useState(false);
   const [reaction, setReaction] = useState<'happy' | 'sad' | 'stress' | null>(null);
-  const [tutorialAPressed, setTutorialAPressed] = useState(false);
+  const [tutorialAPressCount, setTutorialAPressCount] = useState(0);
+  const [hasPlayedPowerOn, setHasPlayedPowerOn] = useState(false);
+  const [soundHintVisible, setSoundHintVisible] = useState(true);
   
   // Refs
   const lastInteractionRef = useRef<number>(Date.now());
@@ -80,6 +82,16 @@ function AppContent() {
       setIsSleeping(false);
     }
   }, [isSleeping]);
+
+  // Play power-on sound once, on first user gesture (guaranteed gesture)
+  const ensurePowerOnSound = useCallback(() => {
+    if (!hasPlayedPowerOn && gameState.settings.soundEnabled) {
+      soundEngine.resume();
+      soundEngine.playPowerOn();
+      setHasPlayedPowerOn(true);
+      setSoundHintVisible(false);
+    }
+  }, [hasPlayedPowerOn, gameState.settings.soundEnabled]);
 
   // Detect evolution (level 3 or 7 reached)
   useEffect(() => {
@@ -126,6 +138,7 @@ function AppContent() {
     const messageListener = (message: { type: string; xpGain?: number; level?: number }) => {
       if (message.type === MESSAGES.TAB_CLOSED) {
         wakeUp();
+        ensurePowerOnSound();
         setIsEating(true);
         soundEngine.playMunch();
         setReaction('happy');
@@ -152,6 +165,7 @@ function AppContent() {
 
       if (message.type === MESSAGES.LEVEL_UP) {
         wakeUp();
+        ensurePowerOnSound();
         soundEngine.playLevelUp();
       }
     };
@@ -175,6 +189,7 @@ function AppContent() {
 
   const toggleSound = useCallback(() => {
     wakeUp();
+    ensurePowerOnSound();
     setGameState({
       ...gameState,
       settings: {
@@ -186,6 +201,7 @@ function AppContent() {
 
   const handleRevive = useCallback(async () => {
     wakeUp();
+    ensurePowerOnSound();
     setIsReviving(true);
     soundEngine.playRevive();
     
@@ -202,10 +218,11 @@ function AppContent() {
 
   const handleAButton = useCallback(() => {
     wakeUp();
+    ensurePowerOnSound();
     
-    // Tutorial: signal A was pressed
+    // Tutorial: count A presses
     if (showTutorial) {
-      setTutorialAPressed(true);
+      setTutorialAPressCount((c) => c + 1);
       return;
     }
 
@@ -218,6 +235,7 @@ function AppContent() {
 
   const handleStartButton = useCallback(() => {
     wakeUp();
+    ensurePowerOnSound();
     if (showSettings) {
       setShowSettings(false);
     } else if (showStats) {
@@ -230,6 +248,7 @@ function AppContent() {
 
   const handleSelectButton = useCallback(async () => {
     wakeUp();
+    ensurePowerOnSound();
     try {
       await chrome.runtime.sendMessage({ type: MESSAGES.TOGGLE_FOCUS_MODE });
     } catch (error) {
@@ -264,14 +283,31 @@ function AppContent() {
     );
   }
 
+  // Derive overlay priority
+  const isDeadOverlay = gameState.pet.mood === 'DEAD' && !isReviving;
+  const activeOverlay = showEvolution ? 'evolution' : showTutorial ? 'tutorial' : isDeadOverlay ? 'dead' : null;
+
   return (
     <ConsoleWrapper
       onAButton={handleAButton}
       onBButton={showStats ? () => { wakeUp(); setShowStats(false); } : toggleSound}
       onStart={handleStartButton}
       onSelect={handleSelectButton}
+      onDpadUp={() => { wakeUp(); ensurePowerOnSound(); setShowStats((s) => !s); }}
+      onDpadDown={() => { wakeUp(); ensurePowerOnSound(); setShowSettings((s) => !s); }}
+      onDpadLeft={async () => {
+        wakeUp();
+        ensurePowerOnSound();
+        try {
+          await chrome.runtime.sendMessage({ type: MESSAGES.TOGGLE_FOCUS_MODE });
+        } catch (error) {
+          console.error('Failed to toggle focus mode:', error);
+        }
+      }}
+      onDpadRight={() => { toggleSound(); }}
       soundEnabled={gameState.settings.soundEnabled}
       mood={gameState.pet.mood}
+      isNight={gameState.environment.isNight}
     >
       <CRTBoot onBootComplete={() => setBootComplete(true)}>
         <div className="flex-1 flex flex-col font-['Press_Start_2P'] text-[#0f380f] bg-[#9bbc0f]">
@@ -332,7 +368,7 @@ function AppContent() {
             </div>
 
             {/* Death Overlay */}
-            {gameState.pet.mood === 'DEAD' && !isReviving && (
+            {activeOverlay === 'dead' && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#0f380f] bg-opacity-60 slide-down">
                 <div className="text-center text-[#9bbc0f] p-3 bg-[#0f380f] border-2 border-[#9bbc0f]">
                   <p className="text-xs mb-2">GAME OVER</p>
@@ -342,7 +378,7 @@ function AppContent() {
             )}
 
             {/* Evolution Sequence */}
-            {showEvolution && evolutionLevels && (
+            {activeOverlay === 'evolution' && showEvolution && evolutionLevels && (
               <EvolutionSequence
                 fromLevel={evolutionLevels.from}
                 toLevel={evolutionLevels.to}
@@ -403,12 +439,19 @@ function AppContent() {
           )}
 
           {/* Interactive Tutorial */}
-          {showTutorial && (
+          {activeOverlay === 'tutorial' && (
             <Tutorial
               tabCount={gameState.environment.tabCount}
               onComplete={handleCloseTutorial}
-              onAButtonPressed={tutorialAPressed}
+              aPressCount={tutorialAPressCount}
             />
+          )}
+
+          {/* Sound hint for first interaction (only when enabled but not yet played) */}
+          {soundHintVisible && gameState.settings.soundEnabled && !hasPlayedPowerOn && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] text-[#0f380f] bg-[#9bbc0f] px-2 py-1 border border-[#0f380f] rounded">
+              CLICK ANY BUTTON TO ENABLE SOUND
+            </div>
           )}
         </div>
       </CRTBoot>

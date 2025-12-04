@@ -6,8 +6,13 @@ interface ConsoleWrapperProps {
   onBButton?: () => void;
   onStart?: () => void;
   onSelect?: () => void;
+  onDpadUp?: () => void;
+  onDpadDown?: () => void;
+  onDpadLeft?: () => void;
+  onDpadRight?: () => void;
   soundEnabled: boolean;
   mood: string;
+  isNight?: boolean;
 }
 
 export function ConsoleWrapper({ 
@@ -16,8 +21,13 @@ export function ConsoleWrapper({
   onBButton, 
   onStart, 
   onSelect,
+  onDpadUp,
+  onDpadDown,
+  onDpadLeft,
+  onDpadRight,
   soundEnabled,
-  mood
+  mood,
+  isNight = false,
 }: ConsoleWrapperProps) {
   // Power LED color based on mood
   const getLedStyle = () => {
@@ -41,7 +51,7 @@ export function ConsoleWrapper({
         <div className="absolute -inset-4 bg-purple-500/20 blur-2xl rounded-[4rem]" />
         
         {/* The Console Body - Plastic Material with Gradient */}
-        <div className="relative bg-gradient-to-br from-purple-400 via-purple-600 to-purple-900 rounded-b-[3rem] rounded-t-[1.5rem] p-6 w-full max-w-sm shadow-[0_25px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.2)]">
+        <div className={`relative bg-gradient-to-br from-purple-400 via-purple-600 to-purple-900 rounded-b-[3rem] rounded-t-[1.5rem] p-6 w-full max-w-sm shadow-[0_25px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.2)] ${isNight ? 'brightness-[0.75]' : ''}`}>
           
           {/* Plastic highlight edge (top-left light source) */}
           <div className="absolute inset-0 rounded-b-[3rem] rounded-t-[1.5rem] bg-gradient-to-br from-white/20 via-transparent to-black/20 pointer-events-none" />
@@ -113,14 +123,30 @@ export function ConsoleWrapper({
             
             {/* D-Pad */}
             <div className="w-20 h-20 relative">
-              {/* Vertical bar */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-full">
-                <div className="w-full h-full bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)]" />
-              </div>
-              {/* Horizontal bar */}
-              <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full h-7">
-                <div className="w-full h-full bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)]" />
-              </div>
+              {/* Up */}
+              <button
+                onClick={onDpadUp}
+                aria-label="D-pad Up"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:translate-y-0.5 active:shadow-[0_1px_0_#1f2937]"
+              />
+              {/* Down */}
+              <button
+                onClick={onDpadDown}
+                aria-label="D-pad Down"
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-7 h-6 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:translate-y-0.5 active:shadow-[0_1px_0_#1f2937]"
+              />
+              {/* Left */}
+              <button
+                onClick={onDpadLeft}
+                aria-label="D-pad Left"
+                className="absolute top-1/2 left-0 -translate-y-1/2 w-6 h-7 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:translate-x-0.5 active:shadow-[0_1px_0_#1f2937]"
+              />
+              {/* Right */}
+              <button
+                onClick={onDpadRight}
+                aria-label="D-pad Right"
+                className="absolute top-1/2 right-0 -translate-y-1/2 w-6 h-7 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 rounded-sm shadow-[0_3px_0_#1f2937,inset_0_1px_0_rgba(255,255,255,0.1)] active:-translate-x-0.5 active:shadow-[0_1px_0_#1f2937]"
+              />
               {/* Center circle */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-radial from-gray-600 to-gray-800 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" />
             </div>
