@@ -2,7 +2,7 @@
  * Settings and customization screen
  */
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { GameState } from '../lib/gameState';
 import { MESSAGES } from '../lib/constants';
 
@@ -12,7 +12,7 @@ interface SettingsScreenProps {
   onUpdate: (updates: Partial<GameState>) => void;
 }
 
-export function SettingsScreen({ gameState, onClose, onUpdate }: SettingsScreenProps) {
+function SettingsScreenComponent({ gameState, onClose, onUpdate }: SettingsScreenProps) {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(gameState.pet.name);
 
@@ -37,7 +37,7 @@ export function SettingsScreen({ gameState, onClose, onUpdate }: SettingsScreenP
   };
 
   return (
-    <div className="absolute inset-0 z-50 bg-[#0f380f] p-3 text-[#9bbc0f] flex flex-col text-[10px] font-['Press_Start_2P'] slide-down">
+    <div className="absolute inset-0 z-50 bg-[#0f380f] p-3 text-[#9bbc0f] flex flex-col text-[10px] font-['Press_Start_2P']">
       <div className="flex justify-between items-center mb-3 border-b-2 border-[#9bbc0f] pb-2">
         <h2 className="text-xs">SETTINGS</h2>
         <button onClick={onClose} className="text-xs hover:animate-pulse">✕</button>
@@ -149,4 +149,6 @@ export function SettingsScreen({ gameState, onClose, onUpdate }: SettingsScreenP
     </div>
   );
 }
+
+export const SettingsScreen = memo(SettingsScreenComponent);
 
