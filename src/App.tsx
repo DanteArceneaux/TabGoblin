@@ -110,13 +110,19 @@ function AppContent() {
   }, []);
 
   const handleAButton = useCallback(() => {
+    // Check if welcome screen is showing first
+    if (showWelcome) {
+      handleCloseWelcome();
+      return;
+    }
+
     if (gameState.pet.mood === 'DEAD') {
       handleRevive();
     } else {
-      // Poke the goblin?
+      // Poke the goblin
       soundEngine.playChirp();
     }
-  }, [gameState.pet.mood, handleRevive]);
+  }, [showWelcome, handleCloseWelcome, gameState.pet.mood, handleRevive]);
 
   const handleStartButton = useCallback(() => {
     if (showSettings) {
