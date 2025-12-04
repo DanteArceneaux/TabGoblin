@@ -11,18 +11,19 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     // Initialize default state
     await chrome.storage.local.set({ [STORAGE_KEYS.GAME_STATE]: DEFAULT_GAME_STATE });
-    
-    // Auto-open side panel on first install
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      await chrome.sidePanel.open({ tabId: tab.id });
-    }
   }
 
   // Set up periodic health check alarm
   chrome.alarms.create(ALARMS.HEALTH_CHECK, {
     periodInMinutes: THRESHOLDS.ALARM_INTERVAL_MINUTES,
   });
+});
+
+// Open side panel when user clicks the extension icon
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id) {
+    chrome.sidePanel.open({ tabId: tab.id });
+  }
 });
 
 // Tab event listeners
