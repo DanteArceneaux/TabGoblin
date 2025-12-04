@@ -5,7 +5,6 @@
 export async function removePinkBackground(imageSrc: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -26,12 +25,14 @@ export async function removePinkBackground(imageSrc: string): Promise<string> {
       const data = imageData.data;
 
       // Remove pink pixels (chroma key)
+      // Target: Bright magenta #ff00ff (R:255, G:0, B:255)
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
         
-        // Detect pink (magenta) with tolerance
+        // Detect pink/magenta - the sprite uses bright magenta
+        // Being aggressive to catch anti-aliased edges too
         const isPink = r > 200 && g < 100 && b > 200;
         
         if (isPink) {
@@ -46,11 +47,17 @@ export async function removePinkBackground(imageSrc: string): Promise<string> {
       resolve(canvas.toDataURL('image/png'));
     };
 
-    img.onerror = () => {
+    img.onerror = (e) => {
+      console.error('Failed to load sprite image:', e);
       reject(new Error('Failed to load image'));
     };
 
-    img.src = imageSrc;
+    // Use chrome.runtime.getURL for extension-relative paths
+    if (imageSrc.startsWith('/')) {
+      img.src = chrome.runtime.getURL(imageSrc.slice(1));
+    } else {
+      img.src = imageSrc;
+    }
   });
 }
 

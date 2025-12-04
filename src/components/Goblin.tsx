@@ -17,11 +17,11 @@ export function Goblin({ level, mood, isEating = false }: GoblinProps) {
   const [spriteSheet, setSpriteSheet] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load and process sprite sheet
+  // Load pre-processed sprite sheet (pink already removed at build time)
   useEffect(() => {
-    // For now, use the PNG from the sprites folder
-    // In production, this would use the processed/background-removed version
-    setSpriteSheet('/sprites/Gemini_Generated_Image_png.png');
+    // Use chrome.runtime.getURL for extension paths
+    const spriteUrl = chrome.runtime.getURL('goblin-sprite.png');
+    setSpriteSheet(spriteUrl);
   }, []);
 
   // Determine which animation to play
