@@ -119,10 +119,10 @@ export function Goblin({ level, mood, isEating = false }: GoblinProps) {
             height: `${SPRITE_CELL_SIZE}px`,
             backgroundImage: `url(${spriteSheet})`,
             backgroundPosition: `${spriteX}px ${spriteY}px`,
-            imageRendering: 'pixelated',
-            transform: mood === 'CORRUPT' ? 'scale(1.1)' : 'scale(1)',
-            transition: 'transform 0.3s ease',
-            filter: mood === 'DEAD' ? 'grayscale(100%)' : 'none',
+          imageRendering: 'pixelated',
+          // Use grayscale and contrast to match the gameboy screen look
+          filter: mood === 'DEAD' ? 'grayscale(100%) brightness(50%)' : 'sepia(100%) hue-rotate(50deg) saturate(200%) brightness(0.8) contrast(1.2)',
+          transform: mood === 'CORRUPT' ? 'scale(1.1)' : 'scale(1)',
           }}
         />
       )}

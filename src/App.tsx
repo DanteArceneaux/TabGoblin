@@ -1,11 +1,15 @@
 /**
  * Main Tab Goblin Side Panel Application
- * Refactored with improved state management
+ * Refactored with Retro Console UI
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import '@fontsource/press-start-2p';
 import { Goblin } from './components/Goblin';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ConsoleWrapper } from './components/ConsoleWrapper';
+import { Particle, FallingTab } from './components/Particle';
+import { StatsScreen } from './components/StatsScreen';
 import { useChromeStorage } from './hooks/useChromeStorage';
 import { GameState, DEFAULT_GAME_STATE } from './lib/gameState';
 import { STORAGE_KEYS, MESSAGES } from './lib/constants';
@@ -19,6 +23,9 @@ function AppContent() {
   );
   const [isEating, setIsEating] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const [fallingTabs, setFallingTabs] = useState<number[]>([]);
 
   // Check for first run
   useEffect(() => {
@@ -34,6 +41,15 @@ function AppContent() {
         // Trigger eating animation
         setIsEating(true);
         soundEngine.playMunch();
+
+        // Add falling tab
+        setFallingTabs((prev) => [...prev, Date.now()]);
+
+        // Add particle
+        setParticles((prev) => [
+          ...prev,
+          { id: Date.now(), x: Math.random() * 100 + 50, y: 100 },
+        ]);
 
         setTimeout(() => {
           setIsEating(false);
@@ -76,16 +92,35 @@ function AppContent() {
     }
   }, []);
 
-  const getBackgroundClass = () => {
-    const { waterCleanliness } = gameState.environment;
-    if (waterCleanliness < GAME_CONFIG.environment.dangerWater) {
-      return 'bg-gradient-to-b from-red-900 to-gray-900';
+  const handleAButton = useCallback(() => {
+    if (gameState.pet.mood === 'DEAD') {
+      handleRevive();
+    } else {
+      // Poke the goblin?
+      soundEngine.playChirp();
     }
-    if (waterCleanliness < GAME_CONFIG.environment.warningWater) {
-      return 'bg-gradient-to-b from-orange-800 to-gray-800';
+  }, [gameState.pet.mood, handleRevive]);
+
+  const handleStartButton = useCallback(() => {
+    setShowStats((prev) => !prev);
+  }, []);
+
+  const handleSelectButton = useCallback(async () => {
+    // Toggle focus mode
+    try {
+      await chrome.runtime.sendMessage({ type: 'TOGGLE_FOCUS_MODE' });
+    } catch (error) {
+      console.error('Failed to toggle focus mode:', error);
     }
-    return 'bg-gradient-to-b from-blue-900 to-purple-900';
-  };
+  }, []);
+
+  const handleParticleComplete = useCallback((id: number) => {
+    setParticles((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const handleTabComplete = useCallback((id: number) => {
+    setFallingTabs((prev) => prev.filter((t) => t !== id));
+  }, []);
 
   const getXpMax = () => {
     if (gameState.pet.level === 1) return GAME_CONFIG.xp.level2Threshold;
@@ -93,145 +128,118 @@ function AppContent() {
     return 100; // Max level
   };
 
+  // Game Boy Green Palette
+  // Darkest: #0f380f
+  // Dark: #306230
+  // Light: #8bac0f
+  // Lightest: #9bbc0f
+
   return (
-    <div
-      className={`min-h-screen ${getBackgroundClass()} transition-colors duration-1000 relative overflow-hidden`}
+    <ConsoleWrapper
+      onAButton={handleAButton}
+      onBButton={showStats ? () => setShowStats(false) : toggleSound}
+      onStart={handleStartButton}
+      onSelect={handleSelectButton}
+      soundEnabled={gameState.settings.soundEnabled}
+      mood={gameState.pet.mood}
     >
-      {/* Welcome Modal */}
-      {showWelcome && (
-        <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md text-white">
-            <h2 className="text-2xl font-bold mb-4">Welcome to Tab Goblin!</h2>
-            <p className="mb-4">
-              Meet your new browser companion! I'll live here in your side panel and react to your
-              browsing habits.
-            </p>
-            <p className="mb-4">
-              <strong>How it works:</strong>
-            </p>
-            <ul className="list-disc list-inside mb-4 space-y-2">
-              <li>Close tabs to feed me and earn XP</li>
-              <li>Keep tabs low (under {GAME_CONFIG.tabs.safeMax}) to keep me happy</li>
-              <li>Too many tabs will make me sick!</li>
-            </ul>
-            <p className="text-sm mb-4 text-gray-400">
-              Note: I only count your tabs. I cannot read their content or your browsing history.
-            </p>
-            <button
-              onClick={handleCloseWelcome}
-              className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-semibold transition-colors"
-            >
-              Let's Go!
-            </button>
+      <div className="flex-1 flex flex-col font-['Press_Start_2P'] text-[#0f380f]">
+        
+        {/* Top Status Bar */}
+        <div className="flex justify-between items-center p-2 border-b-2 border-[#0f380f] bg-[#8bac0f]">
+          <div className="text-[10px]">LVL {gameState.pet.level}</div>
+          <div className="text-[10px]">{gameState.environment.tabCount} TABS</div>
+        </div>
+
+        {/* Main Game Area */}
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+          {/* Falling tabs */}
+          {fallingTabs.map((id) => (
+            <FallingTab key={id} onComplete={() => handleTabComplete(id)} />
+          ))}
+
+          {/* Particles */}
+          {particles.map((particle) => (
+            <Particle
+              key={particle.id}
+              x={particle.x}
+              y={particle.y}
+              onComplete={() => handleParticleComplete(particle.id)}
+            />
+          ))}
+          
+          <div className="transform scale-150">
+            <Goblin level={gameState.pet.level} mood={gameState.pet.mood} isEating={isEating} />
+          </div>
+
+          {gameState.pet.mood === 'DEAD' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#0f380f] bg-opacity-50">
+              <div className="text-center text-[#9bbc0f] p-2 bg-[#0f380f] border-2 border-[#9bbc0f]">
+                <p className="text-xs mb-2">GAME OVER</p>
+                <p className="text-[8px] animate-pulse">PRESS A</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Stats Area */}
+        <div className="p-2 bg-[#8bac0f] border-t-2 border-[#0f380f]">
+          {/* Name and Mood */}
+          <div className="flex justify-between items-center mb-2 text-[10px]">
+            <span>{gameState.pet.name}</span>
+            <span>{gameState.pet.mood}</span>
+          </div>
+
+          {/* Bars */}
+          <div className="space-y-1">
+            {/* Health */}
+            <div className="flex items-center gap-1">
+              <span className="text-[8px] w-8">HP</span>
+              <div className="flex-1 h-2 border-2 border-[#0f380f] p-[1px]">
+                <div 
+                  className="h-full bg-[#0f380f] transition-all duration-300"
+                  style={{ width: `${gameState.pet.health}%` }}
+                />
+              </div>
+            </div>
+
+            {/* XP */}
+            <div className="flex items-center gap-1">
+              <span className="text-[8px] w-8">XP</span>
+              <div className="flex-1 h-2 border-2 border-[#0f380f] p-[1px]">
+                <div 
+                  className="h-full bg-[#306230] transition-all duration-300"
+                  style={{ width: `${(gameState.pet.xp / getXpMax()) * 100}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        {/* Settings */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          <button
-            onClick={toggleSound}
-            className="text-white bg-gray-800 bg-opacity-50 hover:bg-opacity-75 px-3 py-2 rounded transition-colors"
-            title={gameState.settings.soundEnabled ? 'Sound On' : 'Sound Off'}
-          >
-            {gameState.settings.soundEnabled ? '🔊' : '🔇'}
-          </button>
-        </div>
+        {/* Stats Screen */}
+        {showStats && <StatsScreen gameState={gameState} onClose={() => setShowStats(false)} />}
 
-        {/* Goblin */}
-        <div className="mb-8">
-          <Goblin level={gameState.pet.level} mood={gameState.pet.mood} isEating={isEating} />
-        </div>
-
-        {/* Death Screen */}
-        {gameState.pet.mood === 'DEAD' && (
-          <div className="mb-4 text-center">
-            <p className="text-white mb-2">Your goblin has passed away...</p>
+        {/* Welcome Modal (Retro Style) */}
+        {showWelcome && (
+          <div className="absolute inset-0 z-50 bg-[#0f380f] p-4 text-[#9bbc0f] flex flex-col items-center text-center">
+            <h2 className="text-sm mb-4 mt-4 border-b-2 border-[#9bbc0f] pb-2 w-full">TAB GOBLIN</h2>
+            <div className="flex-1 text-[10px] leading-relaxed space-y-4 overflow-y-auto scrollbar-hide">
+              <p>HELLO TRAINER!</p>
+              <p>I LIVE IN YOUR TABS.</p>
+              <p>CLOSE TABS = YUMMY XP</p>
+              <p>TOO MANY TABS = SICK</p>
+              <p className="text-[8px] opacity-75 mt-4">PRESS START FOR INFO</p>
+            </div>
             <button
-              onClick={handleRevive}
-              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white font-semibold transition-colors"
+              onClick={handleCloseWelcome}
+              className="mt-4 mb-2 text-xs animate-pulse"
             >
-              Revive Goblin
+              ▶ PRESS A TO START
             </button>
           </div>
         )}
-
-        {/* Stats */}
-        <div className="bg-gray-800 bg-opacity-80 rounded-lg p-4 w-full max-w-xs text-white">
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-semibold">{gameState.pet.name}</span>
-            <span className="text-sm">Level {gameState.pet.level}</span>
-          </div>
-
-          {/* Health Bar */}
-          <div className="mb-2">
-            <div className="flex justify-between text-xs mb-1">
-              <span>Health</span>
-              <span>{gameState.pet.health}%</span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  gameState.pet.health < 30 ? 'bg-red-500' : 'bg-green-500'
-                }`}
-                style={{ width: `${gameState.pet.health}%` }}
-              />
-            </div>
-          </div>
-
-          {/* XP Bar */}
-          <div className="mb-2">
-            <div className="flex justify-between text-xs mb-1">
-              <span>XP</span>
-              <span>
-                {gameState.pet.xp}/{getXpMax()}
-              </span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(gameState.pet.xp / getXpMax()) * 100}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Tab Count */}
-          <div className="text-center mt-4 pt-4 border-t border-gray-700">
-            <div
-              className={`text-2xl font-bold ${
-                gameState.environment.tabCount > GAME_CONFIG.tabs.dangerMax
-                  ? 'text-red-400'
-                  : gameState.environment.tabCount > GAME_CONFIG.tabs.safeMax
-                    ? 'text-orange-400'
-                    : 'text-white'
-              }`}
-            >
-              {gameState.environment.tabCount}
-            </div>
-            <div className="text-xs text-gray-400">Open Tabs</div>
-          </div>
-
-          {/* Mood Indicator */}
-          <div className="text-center mt-2">
-            <span
-              className={`text-xs px-2 py-1 rounded ${
-                gameState.pet.mood === 'HAPPY'
-                  ? 'bg-green-700'
-                  : gameState.pet.mood === 'GREEDY'
-                    ? 'bg-orange-700'
-                    : gameState.pet.mood === 'CORRUPT'
-                      ? 'bg-red-700'
-                      : 'bg-gray-700'
-              }`}
-            >
-              {gameState.pet.mood}
-            </span>
-          </div>
-        </div>
       </div>
-    </div>
+    </ConsoleWrapper>
   );
 }
 
