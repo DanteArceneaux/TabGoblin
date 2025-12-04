@@ -23,6 +23,7 @@ export interface GameStats {
   tabsClosed: number;
   totalXP: number;
   lastActiveTime: number;
+  firstPlayTime: number;
 }
 
 export interface GameSettings {
@@ -55,6 +56,7 @@ export const DEFAULT_GAME_STATE: GameState = {
     tabsClosed: 0,
     totalXP: 0,
     lastActiveTime: Date.now(),
+    firstPlayTime: Date.now(),
   },
   settings: {
     soundEnabled: false,

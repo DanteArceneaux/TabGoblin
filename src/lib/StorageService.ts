@@ -10,6 +10,17 @@ class StorageService {
   private cache: GameState | null = null;
   private listeners: Set<(state: GameState) => void> = new Set();
 
+  constructor() {
+    // Listen for external storage changes to invalidate cache
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.onChanged.addListener((changes) => {
+        if (changes[STORAGE_KEYS.GAME_STATE]) {
+          this.cache = null; // Invalidate cache when external changes occur
+        }
+      });
+    }
+  }
+
   /**
    * Get the current game state
    * Uses cache if available, otherwise fetches from storage

@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/process-sprites.js && tsc && vite build",
+    "build": "node scripts/process-sprites.js && node scripts/generate-icons.js && tsc && vite build",
     "build:sprites": "node scripts/process-sprites.js",
+    "build:icons": "node scripts/generate-icons.js",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },

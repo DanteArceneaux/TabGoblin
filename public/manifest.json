@@ -1,8 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Tab Goblin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A productivity companion that lives in your browser. Feed your goblin by closing tabs!",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
   "permissions": [
     "tabs",
     "storage",
@@ -17,6 +22,11 @@
     "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "Open Tab Goblin"
+    "default_title": "Open Tab Goblin",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
   }
 }

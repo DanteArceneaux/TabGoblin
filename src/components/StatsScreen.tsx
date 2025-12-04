@@ -10,7 +10,7 @@ interface StatsScreenProps {
 }
 
 export function StatsScreen({ gameState, onClose }: StatsScreenProps) {
-  const playtime = Math.floor((Date.now() - (gameState.stats.lastActiveTime || Date.now())) / 1000 / 60);
+  const playtime = Math.floor((Date.now() - (gameState.stats.firstPlayTime || Date.now())) / 1000 / 60);
 
   return (
     <div className="absolute inset-0 z-50 bg-[#0f380f] p-3 text-[#9bbc0f] flex flex-col text-[10px] font-['Press_Start_2P']">

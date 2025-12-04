@@ -85,11 +85,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       storageService.getState().then(sendResponse);
       return true; // Keep channel open for async response
 
-    case 'TOGGLE_FOCUS_MODE':
+    case MESSAGES.TOGGLE_FOCUS_MODE:
       gameEngine.toggleFocusMode().then(sendResponse);
       return true;
 
-    case 'REVIVE_GOBLIN':
+    case MESSAGES.REVIVE_GOBLIN:
       gameEngine.reviveGoblin().then(() => sendResponse({ success: true }));
       return true;
 

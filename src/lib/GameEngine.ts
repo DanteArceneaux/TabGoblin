@@ -19,6 +19,11 @@ class GameEngine {
   async onTabClosed(): Promise<void> {
     const state = await storageService.getState();
 
+    // Skip if focus mode is active
+    if (state.settings.focusModeActive) {
+      return;
+    }
+
     // Check if we need to reset diminishing returns counter
     const now = Date.now();
     const minutesSinceReset = (now - this.lastResetTime) / (1000 * 60);
@@ -42,13 +47,16 @@ class GameEngine {
       state.stats.tabsClosed += 1;
 
       // Check for level up
-      state.pet.level = this.calculateLevel(state.pet.xp, state.pet.level);
-
-      // Reset XP on level up
-      if (state.pet.level === 2 && state.pet.xp >= GAME_CONFIG.xp.level2Threshold) {
-        state.pet.xp = state.pet.xp - GAME_CONFIG.xp.level2Threshold;
-      } else if (state.pet.level === 3 && state.pet.xp >= GAME_CONFIG.xp.level3Threshold) {
-        state.pet.xp = state.pet.xp - GAME_CONFIG.xp.level3Threshold;
+      const oldLevel = state.pet.level;
+      const newLevel = this.calculateLevel(state.pet.xp, state.pet.level);
+      
+      // If leveled up, reset XP and notify
+      if (newLevel > oldLevel) {
+        state.pet.level = newLevel;
+        state.pet.xp = 0; // Reset to 0 on level up
+        
+        // Broadcast level up event
+        this.broadcastMessage({ type: MESSAGES.LEVEL_UP, level: newLevel });
       }
 
       // Health boost
@@ -71,6 +79,13 @@ class GameEngine {
   async updateTabCount(tabCount: number): Promise<void> {
     const state = await storageService.getState();
 
+    // Skip mood/corruption updates if focus mode is active
+    if (state.settings.focusModeActive) {
+      state.environment.tabCount = tabCount; // Still track count for display
+      await storageService.setState(state);
+      return;
+    }
+
     state.environment.tabCount = tabCount;
     state.environment.waterCleanliness = this.calculateWaterCleanliness(tabCount);
     state.pet.mood = this.calculateMood(tabCount, state.pet.health);
@@ -83,6 +98,12 @@ class GameEngine {
    */
   async performHealthCheck(): Promise<void> {
     const state = await storageService.getState();
+    
+    // Skip health checks if focus mode is active
+    if (state.settings.focusModeActive) {
+      return;
+    }
+
     const now = Date.now();
 
     // Calculate neglect penalty

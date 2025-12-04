@@ -4,8 +4,9 @@
 
 import { useEffect, useState } from 'react';
 
-export function useChromeStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
+export function useChromeStorage<T>(key: string, defaultValue: T): [T, (value: T) => void, boolean] {
   const [value, setValue] = useState<T>(defaultValue);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load initial value from storage
   useEffect(() => {
@@ -13,6 +14,7 @@ export function useChromeStorage<T>(key: string, defaultValue: T): [T, (value: T
       if (result[key] !== undefined) {
         setValue(result[key]);
       }
+      setIsLoading(false);
     });
   }, [key]);
 
@@ -34,6 +36,6 @@ export function useChromeStorage<T>(key: string, defaultValue: T): [T, (value: T
     chrome.storage.local.set({ [key]: newValue });
   };
 
-  return [value, updateValue];
+  return [value, updateValue, isLoading];
 }
 

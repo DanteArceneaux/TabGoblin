@@ -17,7 +17,7 @@ import { GAME_CONFIG } from './lib/config';
 import { soundEngine } from './lib/SoundEngine';
 
 function AppContent() {
-  const [gameState, setGameState] = useChromeStorage<GameState>(
+  const [gameState, setGameState, isLoading] = useChromeStorage<GameState>(
     STORAGE_KEYS.GAME_STATE,
     DEFAULT_GAME_STATE
   );
@@ -26,6 +26,8 @@ function AppContent() {
   const [showStats, setShowStats] = useState(false);
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const [fallingTabs, setFallingTabs] = useState<number[]>([]);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [particleIdCounter, setParticleIdCounter] = useState(0);
 
   // Check for first run
   useEffect(() => {
@@ -36,30 +38,43 @@ function AppContent() {
 
   // Listen for events from background script
   useEffect(() => {
-    const messageListener = (message: { type: string; xpGain?: number }) => {
+    const messageListener = (message: { type: string; xpGain?: number; level?: number }) => {
       if (message.type === MESSAGES.TAB_CLOSED) {
         // Trigger eating animation
         setIsEating(true);
         soundEngine.playMunch();
 
-        // Add falling tab
-        setFallingTabs((prev) => [...prev, Date.now()]);
+        // Add falling tab with unique ID
+        setParticleIdCounter((prev) => prev + 1);
+        const tabId = Date.now() + particleIdCounter;
+        setFallingTabs((prev) => [...prev, tabId]);
 
-        // Add particle
+        // Add particle with unique ID
+        setParticleIdCounter((prev) => prev + 1);
+        const particleId = Date.now() + particleIdCounter + 1;
         setParticles((prev) => [
           ...prev,
-          { id: Date.now(), x: Math.random() * 100 + 50, y: 100 },
+          { id: particleId, x: Math.random() * 100 + 50, y: 100 },
         ]);
 
         setTimeout(() => {
           setIsEating(false);
         }, GAME_CONFIG.animation.eatingDurationMs);
       }
+
+      if (message.type === MESSAGES.LEVEL_UP) {
+        // Show level up celebration
+        setShowLevelUp(true);
+        soundEngine.playChirp();
+        setTimeout(() => {
+          setShowLevelUp(false);
+        }, 2000);
+      }
     };
 
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, []);
+  }, [particleIdCounter]);
 
   // Update sound engine when settings change
   useEffect(() => {
@@ -86,7 +101,7 @@ function AppContent() {
 
   const handleRevive = useCallback(async () => {
     try {
-      await chrome.runtime.sendMessage({ type: 'REVIVE_GOBLIN' });
+      await chrome.runtime.sendMessage({ type: MESSAGES.REVIVE_GOBLIN });
     } catch (error) {
       console.error('Failed to revive goblin:', error);
     }
@@ -108,7 +123,7 @@ function AppContent() {
   const handleSelectButton = useCallback(async () => {
     // Toggle focus mode
     try {
-      await chrome.runtime.sendMessage({ type: 'TOGGLE_FOCUS_MODE' });
+      await chrome.runtime.sendMessage({ type: MESSAGES.TOGGLE_FOCUS_MODE });
     } catch (error) {
       console.error('Failed to toggle focus mode:', error);
     }
@@ -134,6 +149,22 @@ function AppContent() {
   // Light: #8bac0f
   // Lightest: #9bbc0f
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <ConsoleWrapper
+        soundEnabled={false}
+        mood="HAPPY"
+      >
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-[#0f380f] text-xs font-['Press_Start_2P'] animate-pulse">
+            LOADING...
+          </div>
+        </div>
+      </ConsoleWrapper>
+    );
+  }
+
   return (
     <ConsoleWrapper
       onAButton={handleAButton}
@@ -147,7 +178,12 @@ function AppContent() {
         
         {/* Top Status Bar */}
         <div className="flex justify-between items-center p-2 border-b-2 border-[#0f380f] bg-[#8bac0f]">
-          <div className="text-[10px]">LVL {gameState.pet.level}</div>
+          <div className="text-[10px] flex items-center gap-1">
+            LVL {gameState.pet.level}
+            {gameState.settings.focusModeActive && (
+              <span className="text-[8px] ml-1 opacity-75">💤</span>
+            )}
+          </div>
           <div className="text-[10px]">{gameState.environment.tabCount} TABS</div>
         </div>
 
@@ -177,6 +213,16 @@ function AppContent() {
               <div className="text-center text-[#9bbc0f] p-2 bg-[#0f380f] border-2 border-[#9bbc0f]">
                 <p className="text-xs mb-2">GAME OVER</p>
                 <p className="text-[8px] animate-pulse">PRESS A</p>
+              </div>
+            </div>
+          )}
+
+          {/* Level Up Celebration */}
+          {showLevelUp && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#0f380f] bg-opacity-80 animate-pulse">
+              <div className="text-center text-[#9bbc0f] p-4 bg-[#0f380f] border-4 border-[#9bbc0f]">
+                <p className="text-xl mb-2">★ LEVEL UP! ★</p>
+                <p className="text-xs">EVOLVED TO LV {gameState.pet.level}</p>
               </div>
             </div>
           )}

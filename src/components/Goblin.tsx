@@ -123,6 +123,7 @@ export function Goblin({ level, mood, isEating = false }: GoblinProps) {
           // Use grayscale and contrast to match the gameboy screen look
           filter: mood === 'DEAD' ? 'grayscale(100%) brightness(50%)' : 'sepia(100%) hue-rotate(50deg) saturate(200%) brightness(0.8) contrast(1.2)',
           transform: mood === 'CORRUPT' ? 'scale(1.1)' : 'scale(1)',
+          transition: 'transform 0.3s ease, filter 0.5s ease',
           }}
         />
       )}
