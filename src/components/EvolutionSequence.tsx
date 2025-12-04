@@ -45,7 +45,7 @@ export function EvolutionSequence({ fromLevel: _fromLevel, toLevel, onComplete }
   if (phase === 'done') return null;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-auto">
       {/* White flash overlay */}
       {phase === 'flash' && (
         <div className="absolute inset-0 bg-white evolution-flash" />

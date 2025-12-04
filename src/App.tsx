@@ -33,7 +33,6 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false);
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const [fallingTabs, setFallingTabs] = useState<number[]>([]);
-  const [particleIdCounter, setParticleIdCounter] = useState(0);
   
   // Animation States
   const [bootComplete, setBootComplete] = useState(false);
@@ -48,6 +47,7 @@ function AppContent() {
   const lastInteractionRef = useRef<number>(Date.now());
   const previousLevelRef = useRef<number>(gameState.pet.level);
   const previousMoodRef = useRef<string>(gameState.pet.mood);
+  const particleIdRef = useRef<number>(0);
 
   // Check for first run - show tutorial
   useEffect(() => {
@@ -115,10 +115,6 @@ function AppContent() {
         soundEngine.playGlitch();
         setReaction('stress');
         setTimeout(() => setReaction(null), 500);
-      } else if (currentMood === 'GREEDY' && prevMood === 'HAPPY') {
-        soundEngine.playWhimper();
-        setReaction('sad');
-        setTimeout(() => setReaction(null), 500);
       }
       
       previousMoodRef.current = currentMood;
@@ -134,18 +130,19 @@ function AppContent() {
         soundEngine.playMunch();
         setReaction('happy');
 
-        // Add falling tab
-        setParticleIdCounter((prev) => prev + 1);
-        const tabId = Date.now() + particleIdCounter;
-        setFallingTabs((prev) => [...prev, tabId]);
+        // Generate unique IDs using a ref to avoid stale closures
+        setFallingTabs((prev) => {
+          const newId = Date.now() + (++particleIdRef.current);
+          return [...prev, newId];
+        });
 
-        // Add XP particle
-        setParticleIdCounter((prev) => prev + 1);
-        const particleId = Date.now() + particleIdCounter + 1;
-        setParticles((prev) => [
-          ...prev,
-          { id: particleId, x: Math.random() * 100 + 50, y: 100 },
-        ]);
+        setParticles((prev) => {
+          const newId = Date.now() + (++particleIdRef.current);
+          return [
+            ...prev,
+            { id: newId, x: Math.random() * 100 + 50, y: 100 },
+          ];
+        });
 
         setTimeout(() => {
           setIsEating(false);
@@ -161,7 +158,7 @@ function AppContent() {
 
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, [particleIdCounter, wakeUp]);
+  }, [wakeUp]);
 
   // Update sound engine when settings change
   useEffect(() => {

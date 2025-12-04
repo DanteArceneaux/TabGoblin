@@ -40,9 +40,9 @@ export class SoundEngine {
    * Play "power on" sound - click followed by rising hum
    */
   playPowerOn() {
-    if (!this.enabled) {
-      this.initAudioContext();
-    }
+    // Respect user sound toggle
+    if (!this.enabled) return;
+    this.initAudioContext();
     if (!this.ctx) return;
 
     const now = this.ctx.currentTime;
