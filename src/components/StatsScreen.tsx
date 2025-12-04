@@ -13,7 +13,7 @@ export function StatsScreen({ gameState, onClose }: StatsScreenProps) {
   const playtime = Math.floor((Date.now() - (gameState.stats.firstPlayTime || Date.now())) / 1000 / 60);
 
   return (
-    <div className="absolute inset-0 z-50 bg-[#0f380f] p-3 text-[#9bbc0f] flex flex-col text-[10px] font-['Press_Start_2P']">
+    <div className="absolute inset-0 z-50 bg-[#0f380f] p-3 text-[#9bbc0f] flex flex-col text-[10px] font-['Press_Start_2P'] slide-down">
       <div className="flex justify-between items-center mb-3 border-b-2 border-[#9bbc0f] pb-2">
         <h2 className="text-xs">STATS</h2>
         <button onClick={onClose} className="text-xs hover:animate-pulse">✕</button>
