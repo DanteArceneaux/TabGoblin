@@ -30,6 +30,9 @@ export interface GameSettings {
   soundEnabled: boolean;
   focusModeActive: boolean;
   isFirstRun: boolean;
+  consoleVariant: 'dmg' | 'gbc-purple' | 'gbc-teal';
+  lcdPalette: 'pea-green' | 'muted-color';
+  soundHintDismissed?: boolean;
 }
 
 export interface GameState {
@@ -62,6 +65,9 @@ export const DEFAULT_GAME_STATE: GameState = {
     soundEnabled: false,
     focusModeActive: false,
     isFirstRun: true,
+    consoleVariant: 'gbc-purple',
+    lcdPalette: 'pea-green',
+    soundHintDismissed: false,
   },
 };
 

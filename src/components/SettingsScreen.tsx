@@ -94,10 +94,12 @@ function SettingsScreenComponent({ gameState, onClose, onUpdate }: SettingsScree
                 settings: { ...gameState.settings, soundEnabled: !gameState.settings.soundEnabled }
               })}
               className="bg-[#306230] px-2 py-1 border-2 border-[#9bbc0f] active:translate-y-0.5"
+              aria-pressed={gameState.settings.soundEnabled}
             >
               {gameState.settings.soundEnabled ? 'ON' : 'OFF'}
             </button>
           </div>
+          <p className="text-[8px] mt-1 opacity-75">AUDIO CUES & CHIMES</p>
         </div>
 
         {/* Focus Mode */}
@@ -113,11 +115,49 @@ function SettingsScreenComponent({ gameState, onClose, onUpdate }: SettingsScree
                 }
               }}
               className="bg-[#306230] px-2 py-1 border-2 border-[#9bbc0f] active:translate-y-0.5"
+              aria-pressed={gameState.settings.focusModeActive}
             >
               {gameState.settings.focusModeActive ? 'ON' : 'OFF'}
             </button>
           </div>
           <p className="text-[8px] mt-1 opacity-75">PAUSES GAME</p>
+        </div>
+
+        {/* Console Theme */}
+        <div>
+          <div className="text-xs mb-2 text-[#8bac0f]">CONSOLE THEME</div>
+          <div className="grid grid-cols-3 gap-2 text-[9px]">
+            {(['dmg', 'gbc-purple', 'gbc-teal'] as const).map((variant) => (
+              <button
+                key={variant}
+                onClick={() => onUpdate({ settings: { ...gameState.settings, consoleVariant: variant } })}
+                className={`px-2 py-2 border-2 border-[#9bbc0f] bg-[#306230] active:translate-y-0.5 ${gameState.settings.consoleVariant === variant ? 'ring-2 ring-[#9bbc0f]' : ''}`}
+                aria-pressed={gameState.settings.consoleVariant === variant}
+              >
+                {variant === 'dmg' && 'DMG'}
+                {variant === 'gbc-purple' && 'GBC PURP'}
+                {variant === 'gbc-teal' && 'GBC TEAL'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* LCD Palette */}
+        <div>
+          <div className="text-xs mb-2 text-[#8bac0f]">LCD PALETTE</div>
+          <div className="flex gap-2 text-[9px]">
+            {(['pea-green', 'muted-color'] as const).map((palette) => (
+              <button
+                key={palette}
+                onClick={() => onUpdate({ settings: { ...gameState.settings, lcdPalette: palette } })}
+                className={`flex-1 px-2 py-2 border-2 border-[#9bbc0f] bg-[#306230] active:translate-y-0.5 ${gameState.settings.lcdPalette === palette ? 'ring-2 ring-[#9bbc0f]' : ''}`}
+                aria-pressed={gameState.settings.lcdPalette === palette}
+              >
+                {palette === 'pea-green' ? 'GREEN' : 'COLOR'}
+              </button>
+            ))}
+          </div>
+          <p className="text-[8px] mt-1 opacity-75">CHOOSE NOSTALGIA OR COLOR</p>
         </div>
 
         {/* Divider */}

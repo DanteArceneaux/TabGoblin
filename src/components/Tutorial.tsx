@@ -63,7 +63,7 @@ export function Tutorial({ tabCount, onComplete, aPressCount }: TutorialProps) {
     >
       {/* Step: Intro */}
       {step === 'intro' && (
-        <div className="text-center animate-pulse">
+        <div className="text-center animate-pulse bg-[#0f2f0f] border-2 border-[#9bbc0f] px-4 py-3 rounded-sm shadow-lg">
           <div className="text-lg mb-4">🦎</div>
           <p className="text-xs">HELLO...</p>
         </div>
@@ -71,39 +71,39 @@ export function Tutorial({ tabCount, onComplete, aPressCount }: TutorialProps) {
 
       {/* Step: Show tab count */}
       {step === 'show-tabs' && (
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 bg-[#0f2f0f] border-2 border-[#9bbc0f] px-4 py-4 rounded-sm shadow-lg">
           <p className="text-[10px] text-[#8bac0f]">YOU HAVE</p>
           <p className="text-2xl">{tabCount}</p>
           <p className="text-[10px] text-[#8bac0f]">TABS OPEN!</p>
           {tabCount > 10 && (
-            <p className="text-[8px] mt-4 animate-pulse">THAT'S A LOT...</p>
+            <p className="text-[8px] mt-2 animate-pulse">THAT'S A LOT...</p>
           )}
         </div>
       )}
 
       {/* Step: Press A instruction */}
       {step === 'press-a' && (
-        <div className="text-center space-y-6">
+        <div className="text-center space-y-6 bg-[#0f2f0f] border-2 border-[#9bbc0f] px-5 py-5 rounded-sm shadow-lg">
           <div className="text-4xl">🦎</div>
           <p className="text-[10px]">I EAT CLOSED TABS</p>
-          <div className="flex items-center justify-center gap-2 mt-6">
+          <div className="flex items-center justify-center gap-2 mt-4">
             <span className="text-xs pulse-arrow">▶</span>
             <span className="text-xs">PRESS</span>
             <span className="w-8 h-8 bg-rose-600 rounded-full flex items-center justify-center text-rose-900 font-bold pulse-glow text-rose-500">
               A
             </span>
           </div>
-          <p className="text-[8px] text-[#8bac0f] mt-2">TO FEED ME!</p>
+          <p className="text-[8px] text-[#8bac0f] mt-1">TO FEED ME!</p>
         </div>
       )}
 
       {/* Step: Success feedback */}
       {step === 'success' && (
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 bg-[#0f2f0f] border-2 border-[#9bbc0f] px-5 py-4 rounded-sm shadow-lg">
           <div className="text-4xl happy-bounce">🦎</div>
           <p className="text-sm text-[#9bbc0f]">YUM!</p>
           <p className="text-xs">+5 XP</p>
-          <p className="text-[8px] text-[#8bac0f] mt-4">KEEP ME FED!</p>
+          <p className="text-[8px] text-[#8bac0f] mt-2">KEEP ME FED!</p>
         </div>
       )}
 

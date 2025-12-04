@@ -181,7 +181,7 @@ function ConsoleWrapperComponent({
           {/* Controls Area */}
           <div className="flex justify-between items-end px-3 pb-3 relative z-10">
             {/* D-Pad */}
-            <div className="w-[78px] h-[78px] relative">
+          <div className="w-[78px] h-[78px] relative">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className={`w-16 h-16 bg-gradient-to-b ${theme.dpad} rounded-[6px] shadow-[0_5px_0_#111827,inset_0_1px_0_rgba(255,255,255,0.08)]`} />
                 <div className={`absolute w-6 h-16 bg-gradient-to-b ${theme.dpad} rounded-[6px] shadow-[0_4px_0_#111827,inset_0_1px_0_rgba(255,255,255,0.08)]`} />
@@ -191,22 +191,22 @@ function ConsoleWrapperComponent({
               <button
                 onClick={onDpadUp}
                 aria-label="D-pad Up"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 rounded-t-[6px] z-10"
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 active:translate-y-[1px] rounded-t-[6px] z-10"
               />
               <button
                 onClick={onDpadDown}
                 aria-label="D-pad Down"
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 rounded-b-[6px] z-10"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 active:-translate-y-[1px] rounded-b-[6px] z-10"
               />
               <button
                 onClick={onDpadLeft}
                 aria-label="D-pad Left"
-                className="absolute top-1/2 left-0 -translate-y-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 rounded-l-[6px] z-10"
+              className="absolute top-1/2 left-0 -translate-y-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 active:translate-x-[1px] rounded-l-[6px] z-10"
               />
               <button
                 onClick={onDpadRight}
                 aria-label="D-pad Right"
-                className="absolute top-1/2 right-0 -translate-y-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 rounded-r-[6px] z-10"
+              className="absolute top-1/2 right-0 -translate-y-1/2 w-7 h-7 bg-transparent hover:bg-white/10 active:bg-white/25 active:-translate-x-[1px] rounded-r-[6px] z-10"
               />
             </div>
 
@@ -237,15 +237,16 @@ function ConsoleWrapperComponent({
                   onClick={onBButton}
                   className={`w-11 h-11 rounded-full transition-all flex items-center justify-center
                     bg-gradient-to-b ${theme.buttonB}
-                    shadow-[0_5px_0_#111827,0_6px_10px_rgba(0,0,0,0.4),inset_0_2px_0_rgba(255,255,255,0.25)]
+                    shadow-[0_5px_0_#111827,0_8px_14px_rgba(0,0,0,0.45),inset_0_2px_0_rgba(255,255,255,0.25)]
                     active:shadow-[0_1px_0_#111827,inset_0_2px_0_rgba(255,255,255,0.25)]
-                    active:translate-y-1
+                    active:translate-y-[2px] active:rotate-[-10deg]
                     hover:brightness-110
+                    -rotate-[12deg]
                     ${!soundEnabled ? 'opacity-60' : ''}
                   `}
                   aria-label="B Button - Toggle Sound"
                 >
-                  <span className="text-rose-900 font-black text-lg drop-shadow-[0_1px_0_rgba(255,255,255,0.3)]">B</span>
+                  <span className="text-rose-950 font-black text-lg drop-shadow-[0_1px_0_rgba(255,255,255,0.35)]">B</span>
                 </button>
               </div>
 
@@ -254,14 +255,15 @@ function ConsoleWrapperComponent({
                   onClick={onAButton}
                   className={`w-11 h-11 rounded-full transition-all flex items-center justify-center
                     bg-gradient-to-b ${theme.buttonA}
-                    shadow-[0_5px_0_#111827,0_6px_10px_rgba(0,0,0,0.4),inset_0_2px_0_rgba(255,255,255,0.25)]
+                    shadow-[0_5px_0_#111827,0_8px_14px_rgba(0,0,0,0.45),inset_0_2px_0_rgba(255,255,255,0.25)]
                     active:shadow-[0_1px_0_#111827,inset_0_2px_0_rgba(255,255,255,0.25)]
-                    active:translate-y-1
+                    active:translate-y-[2px] active:rotate-[-10deg]
                     hover:brightness-110
+                    -rotate-[12deg]
                   `}
                   aria-label="A Button - Interact"
                 >
-                  <span className="text-rose-900 font-black text-lg drop-shadow-[0_1px_0_rgba(255,255,255,0.3)]">A</span>
+                  <span className="text-rose-950 font-black text-lg drop-shadow-[0_1px_0_rgba(255,255,255,0.35)]">A</span>
                 </button>
               </div>
             </div>

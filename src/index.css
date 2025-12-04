@@ -306,6 +306,16 @@ body {
   animation: pulse-glow 1s ease-in-out infinite;
 }
 
+/* Simple fade-in utility */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
 /* Hide scrollbar but allow scrolling */
 .scrollbar-hide {
   -ms-overflow-style: none;

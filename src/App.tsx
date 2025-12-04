@@ -3,7 +3,7 @@
  * Polished with CRT boot, interactive tutorial, and juice
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, CSSProperties } from 'react';
 import '@fontsource/press-start-2p';
 import { Goblin } from './components/Goblin';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -44,6 +44,36 @@ function AppContent() {
   const [tutorialAPressCount, setTutorialAPressCount] = useState(0);
   const [hasPlayedPowerOn, setHasPlayedPowerOn] = useState(false);
   const [soundHintVisible, setSoundHintVisible] = useState(true);
+  // LCD palette options
+  const LCD_PALETTES = {
+    'pea-green': {
+      bg: '#9bbc0f',
+      text: '#0f380f',
+      accent: '#8bac0f',
+      bar: '#0f380f',
+      bar2: '#306230',
+      window: '#8b956d',
+    },
+    'muted-color': {
+      bg: '#9ccfdd',
+      text: '#0b3140',
+      accent: '#5aa6bd',
+      bar: '#0b3140',
+      bar2: '#2c6a82',
+      window: '#7ba7b7',
+    },
+  } as const;
+
+  const lcdPalette = LCD_PALETTES[gameState.settings.lcdPalette] || LCD_PALETTES['pea-green'];
+  const lcdVars = {
+    '--lcd-bg': lcdPalette.bg,
+    '--lcd-text': lcdPalette.text,
+    '--lcd-accent': lcdPalette.accent,
+    '--lcd-bar': lcdPalette.bar,
+    '--lcd-bar2': lcdPalette.bar2,
+    '--lcd-window': lcdPalette.window,
+  } as CSSProperties;
+
   
   // Refs
   const lastInteractionRef = useRef<number>(Date.now());
@@ -308,28 +338,45 @@ function AppContent() {
       soundEnabled={gameState.settings.soundEnabled}
       mood={gameState.pet.mood}
       isNight={gameState.environment.isNight}
+      consoleVariant={gameState.settings.consoleVariant}
     >
       <CRTBoot onBootComplete={() => setBootComplete(true)}>
-        <div className="flex-1 flex flex-col font-['Press_Start_2P'] text-[#0f380f] bg-[#9bbc0f]">
+        <div
+          className="flex-1 flex flex-col font-['Press_Start_2P']"
+          style={lcdVars}
+        >
           
           {/* Top Status Bar */}
-          <div className="flex justify-between items-center p-2 border-b-2 border-[#0f380f] bg-[#8bac0f]">
-            <div className="text-[10px] flex items-center gap-1">
-              LVL {gameState.pet.level}
+          <div
+            className="flex justify-between items-center p-2 border-b-2"
+            style={{ borderColor: 'var(--lcd-bar)', backgroundColor: lcdPalette.accent, color: lcdPalette.text }}
+          >
+            <div className="text-[10px] flex items-center gap-2">
+              <span>LVL {gameState.pet.level}</span>
+              <span className="text-[9px] opacity-80">
+                {gameState.pet.mood === 'HAPPY' && '🙂'}
+                {gameState.pet.mood === 'GREEDY' && '😋'}
+                {gameState.pet.mood === 'CORRUPT' && '😈'}
+                {gameState.pet.mood === 'DEAD' && '☠️'}
+              </span>
               {gameState.settings.focusModeActive && (
-                <span className="text-[8px] ml-1 opacity-75">💤</span>
+                <span className="text-[9px] opacity-80" title="Focus Mode">💤</span>
+              )}
+              {!gameState.settings.soundEnabled && (
+                <span className="text-[9px] opacity-80" title="Sound Off">🔇</span>
               )}
               {isSleeping && !gameState.settings.focusModeActive && (
-                <span className="text-[8px] ml-1 opacity-75">😴</span>
+                <span className="text-[9px] opacity-80" title="Sleeping">😴</span>
               )}
             </div>
             <div className="text-[10px]">{gameState.environment.tabCount} TABS</div>
           </div>
 
           {/* Main Game Area */}
-          <div className={`flex-1 flex items-center justify-center relative overflow-hidden ${
-            gameState.environment.isNight ? 'bg-[#8bac0f]' : ''
-          }`}>
+          <div
+            className="flex-1 flex items-center justify-center relative overflow-hidden"
+            style={{ backgroundColor: gameState.environment.isNight ? lcdPalette.accent : lcdPalette.bg, color: lcdPalette.text }}
+          >
             {/* Night mode stars */}
             {gameState.environment.isNight && (
               <>
@@ -391,7 +438,10 @@ function AppContent() {
           </div>
 
           {/* Bottom Stats Area */}
-          <div className="p-2 bg-[#8bac0f] border-t-2 border-[#0f380f]">
+          <div
+            className="p-2 border-t-2"
+            style={{ backgroundColor: lcdPalette.accent, borderColor: lcdPalette.bar, color: lcdPalette.text }}
+          >
             {/* Name and Mood */}
             <div className="flex justify-between items-center mb-2 text-[10px]">
               <span>{gameState.pet.name}</span>
@@ -405,10 +455,10 @@ function AppContent() {
               {/* Health */}
               <div className="flex items-center gap-1">
                 <span className="text-[8px] w-8">HP</span>
-                <div className="flex-1 h-2 border-2 border-[#0f380f] p-[1px]">
-                  <div 
-                    className="h-full bg-[#0f380f] transition-all duration-300"
-                    style={{ width: `${gameState.pet.health}%` }}
+                <div className="flex-1 h-2 border-2 p-[1px]" style={{ borderColor: lcdPalette.bar }}>
+                  <div
+                    className="h-full transition-all duration-300"
+                    style={{ width: `${gameState.pet.health}%`, backgroundColor: lcdPalette.bar }}
                   />
                 </div>
               </div>
@@ -416,10 +466,10 @@ function AppContent() {
               {/* XP */}
               <div className="flex items-center gap-1">
                 <span className="text-[8px] w-8">XP</span>
-                <div className="flex-1 h-2 border-2 border-[#0f380f] p-[1px]">
-                  <div 
-                    className="h-full bg-[#306230] transition-all duration-300"
-                    style={{ width: `${(gameState.pet.xp / getXpMax()) * 100}%` }}
+                <div className="flex-1 h-2 border-2 p-[1px]" style={{ borderColor: lcdPalette.bar }}>
+                  <div
+                    className="h-full transition-all duration-300"
+                    style={{ width: `${(gameState.pet.xp / getXpMax()) * 100}%`, backgroundColor: lcdPalette.bar2 }}
                   />
                 </div>
               </div>
@@ -427,15 +477,23 @@ function AppContent() {
           </div>
 
           {/* Stats Screen */}
-          {showStats && <StatsScreen gameState={gameState} onClose={() => setShowStats(false)} />}
+          {showStats && (
+            <>
+              <div className="absolute inset-0 bg-black/30 animate-fade-in pointer-events-none" />
+              <StatsScreen gameState={gameState} onClose={() => setShowStats(false)} />
+            </>
+          )}
 
           {/* Settings Screen */}
           {showSettings && (
-            <SettingsScreen
-              gameState={gameState}
-              onClose={() => setShowSettings(false)}
-              onUpdate={(updates) => setGameState({ ...gameState, ...updates })}
-            />
+            <>
+              <div className="absolute inset-0 bg-black/30 animate-fade-in pointer-events-none" />
+              <SettingsScreen
+                gameState={gameState}
+                onClose={() => setShowSettings(false)}
+                onUpdate={(updates) => setGameState({ ...gameState, ...updates })}
+              />
+            </>
           )}
 
           {/* Interactive Tutorial */}
@@ -449,8 +507,8 @@ function AppContent() {
 
           {/* Sound hint for first interaction (only when enabled but not yet played) */}
           {soundHintVisible && gameState.settings.soundEnabled && !hasPlayedPowerOn && (
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] text-[#0f380f] bg-[#9bbc0f] px-2 py-1 border border-[#0f380f] rounded">
-              CLICK ANY BUTTON TO ENABLE SOUND
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] text-[#0f380f] bg-white/60 px-3 py-1 border border-[#0f380f] rounded-full shadow-sm">
+              CLICK A BUTTON TO ENABLE SOUND
             </div>
           )}
         </div>
