@@ -17,6 +17,7 @@ interface GoblinProps {
 export function Goblin({ level, mood, isEating = false }: GoblinProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [spriteSheet, setSpriteSheet] = useState<string>('');
+  const [idleAction, setIdleAction] = useState<'bounce' | 'wave' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number>(0);
@@ -96,16 +97,38 @@ export function Goblin({ level, mood, isEating = false }: GoblinProps) {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  // Random idle behaviors (only when HAPPY)
+  useEffect(() => {
+    if (mood !== 'HAPPY' || isEating) return;
+
+    const triggerIdleBehavior = () => {
+      const random = Math.random();
+      if (random < 0.3) {
+        setIdleAction('bounce');
+        setTimeout(() => setIdleAction(null), 1000);
+      } else if (random < 0.5) {
+        setIdleAction('wave');
+        setTimeout(() => setIdleAction(null), 800);
+      }
+    };
+
+    // Random idle action every 5-15 seconds
+    const interval = setInterval(triggerIdleBehavior, 5000 + Math.random() * 10000);
+    return () => clearInterval(interval);
+  }, [mood, isEating]);
+
   const spriteX = -(sprite.col + currentFrame) * SPRITE_CELL_SIZE;
   const spriteY = -sprite.row * SPRITE_CELL_SIZE;
 
-  // Add shake effect when corrupted
+  // Add effects based on state
   const shakeClass = mood === 'CORRUPT' ? 'animate-shake' : '';
+  const bounceClass = idleAction === 'bounce' ? 'animate-bounce' : '';
+  const waveClass = idleAction === 'wave' ? 'animate-wiggle' : '';
 
   return (
     <div
       ref={containerRef}
-      className={`goblin-container relative ${shakeClass}`}
+      className={`goblin-container relative ${shakeClass} ${bounceClass} ${waveClass}`}
       style={{
         width: `${SPRITE_CELL_SIZE}px`,
         height: `${SPRITE_CELL_SIZE}px`,

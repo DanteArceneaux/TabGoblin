@@ -50,11 +50,13 @@ export function ConsoleWrapper({
 
         {/* Controls Area */}
         <div className="flex justify-between items-end px-2">
-          {/* D-Pad */}
-          <div className="w-24 h-24 relative">
+          {/* D-Pad (Decorative) */}
+          <div className="w-24 h-24 relative opacity-75">
             <div className="absolute top-0 left-1/3 w-1/3 h-full bg-gray-800 rounded shadow-md" />
             <div className="absolute top-1/3 left-0 w-full h-1/3 bg-gray-800 rounded shadow-md" />
-            <div className="absolute top-1/3 left-1/3 w-1/3 h-1/3 bg-gray-700 rounded-full radial-gradient(circle at center, #333 0%, #222 100%)" />
+            <div className="absolute top-1/3 left-1/3 w-1/3 h-1/3 bg-gray-700 rounded-full" />
+            {/* Decorative center dot */}
+            <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-600 rounded-full transform -translate-x-1/2 -translate-y-1/2" />
           </div>
 
           {/* Start/Select */}

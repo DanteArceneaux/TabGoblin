@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ConsoleWrapper } from './components/ConsoleWrapper';
 import { Particle, FallingTab } from './components/Particle';
 import { StatsScreen } from './components/StatsScreen';
+import { SettingsScreen } from './components/SettingsScreen';
 import { useChromeStorage } from './hooks/useChromeStorage';
 import { GameState, DEFAULT_GAME_STATE } from './lib/gameState';
 import { STORAGE_KEYS, MESSAGES } from './lib/constants';
@@ -24,6 +25,7 @@ function AppContent() {
   const [isEating, setIsEating] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const [fallingTabs, setFallingTabs] = useState<number[]>([]);
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -117,8 +119,15 @@ function AppContent() {
   }, [gameState.pet.mood, handleRevive]);
 
   const handleStartButton = useCallback(() => {
-    setShowStats((prev) => !prev);
-  }, []);
+    if (showSettings) {
+      setShowSettings(false);
+    } else if (showStats) {
+      setShowStats(false);
+      setShowSettings(true);
+    } else {
+      setShowStats(true);
+    }
+  }, [showStats, showSettings]);
 
   const handleSelectButton = useCallback(async () => {
     // Toggle focus mode
@@ -188,7 +197,19 @@ function AppContent() {
         </div>
 
         {/* Main Game Area */}
-        <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+        <div className={`flex-1 flex items-center justify-center relative overflow-hidden ${
+          gameState.environment.isNight ? 'bg-[#0f380f] bg-opacity-20' : ''
+        }`}>
+          {/* Night mode stars */}
+          {gameState.environment.isNight && (
+            <>
+              <div className="absolute top-4 left-8 text-[#9bbc0f] text-xs animate-pulse">✦</div>
+              <div className="absolute top-12 right-12 text-[#9bbc0f] text-xs animate-pulse delay-100">✦</div>
+              <div className="absolute bottom-20 left-16 text-[#9bbc0f] text-xs animate-pulse delay-200">✦</div>
+              <div className="absolute top-20 right-8 text-[#8bac0f] text-[8px] animate-pulse delay-150">✧</div>
+            </>
+          )}
+          
           {/* Falling tabs */}
           {fallingTabs.map((id) => (
             <FallingTab key={id} onComplete={() => handleTabComplete(id)} />
@@ -264,6 +285,15 @@ function AppContent() {
 
         {/* Stats Screen */}
         {showStats && <StatsScreen gameState={gameState} onClose={() => setShowStats(false)} />}
+
+        {/* Settings Screen */}
+        {showSettings && (
+          <SettingsScreen
+            gameState={gameState}
+            onClose={() => setShowSettings(false)}
+            onUpdate={(updates) => setGameState({ ...gameState, ...updates })}
+          />
+        )}
 
         {/* Welcome Modal (Retro Style) */}
         {showWelcome && (
