@@ -1,15 +1,18 @@
 /**
  * Main Tab Goblin Side Panel Application
+ * Refactored with improved state management
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Goblin } from './components/Goblin';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useChromeStorage } from './hooks/useChromeStorage';
 import { GameState, DEFAULT_GAME_STATE } from './lib/gameState';
 import { STORAGE_KEYS, MESSAGES } from './lib/constants';
+import { GAME_CONFIG } from './lib/config';
 import { soundEngine } from './lib/SoundEngine';
 
-function App() {
+function AppContent() {
   const [gameState, setGameState] = useChromeStorage<GameState>(
     STORAGE_KEYS.GAME_STATE,
     DEFAULT_GAME_STATE
@@ -24,17 +27,17 @@ function App() {
     }
   }, [gameState.settings.isFirstRun]);
 
-  // Listen for tab close events from background
+  // Listen for events from background script
   useEffect(() => {
-    const messageListener = (message: any) => {
+    const messageListener = (message: { type: string; xpGain?: number }) => {
       if (message.type === MESSAGES.TAB_CLOSED) {
         // Trigger eating animation
         setIsEating(true);
         soundEngine.playMunch();
-        
+
         setTimeout(() => {
           setIsEating(false);
-        }, 600);
+        }, GAME_CONFIG.animation.eatingDurationMs);
       }
     };
 
@@ -47,15 +50,15 @@ function App() {
     soundEngine.setEnabled(gameState.settings.soundEnabled);
   }, [gameState.settings.soundEnabled]);
 
-  const handleCloseWelcome = () => {
+  const handleCloseWelcome = useCallback(() => {
     setShowWelcome(false);
     setGameState({
       ...gameState,
       settings: { ...gameState.settings, isFirstRun: false },
     });
-  };
+  }, [gameState, setGameState]);
 
-  const toggleSound = () => {
+  const toggleSound = useCallback(() => {
     setGameState({
       ...gameState,
       settings: {
@@ -63,34 +66,52 @@ function App() {
         soundEnabled: !gameState.settings.soundEnabled,
       },
     });
-  };
+  }, [gameState, setGameState]);
+
+  const handleRevive = useCallback(async () => {
+    try {
+      await chrome.runtime.sendMessage({ type: 'REVIVE_GOBLIN' });
+    } catch (error) {
+      console.error('Failed to revive goblin:', error);
+    }
+  }, []);
 
   const getBackgroundClass = () => {
-    if (gameState.environment.waterCleanliness < 40) {
+    const { waterCleanliness } = gameState.environment;
+    if (waterCleanliness < GAME_CONFIG.environment.dangerWater) {
       return 'bg-gradient-to-b from-red-900 to-gray-900';
     }
-    if (gameState.environment.waterCleanliness < 70) {
+    if (waterCleanliness < GAME_CONFIG.environment.warningWater) {
       return 'bg-gradient-to-b from-orange-800 to-gray-800';
     }
     return 'bg-gradient-to-b from-blue-900 to-purple-900';
   };
 
+  const getXpMax = () => {
+    if (gameState.pet.level === 1) return GAME_CONFIG.xp.level2Threshold;
+    if (gameState.pet.level === 2) return GAME_CONFIG.xp.level3Threshold;
+    return 100; // Max level
+  };
+
   return (
-    <div className={`min-h-screen ${getBackgroundClass()} transition-colors duration-1000 relative overflow-hidden`}>
+    <div
+      className={`min-h-screen ${getBackgroundClass()} transition-colors duration-1000 relative overflow-hidden`}
+    >
       {/* Welcome Modal */}
       {showWelcome && (
         <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-lg p-6 max-w-md text-white">
             <h2 className="text-2xl font-bold mb-4">Welcome to Tab Goblin!</h2>
             <p className="mb-4">
-              Meet your new browser companion! I'll live here in your side panel and react to your browsing habits.
+              Meet your new browser companion! I'll live here in your side panel and react to your
+              browsing habits.
             </p>
             <p className="mb-4">
               <strong>How it works:</strong>
             </p>
             <ul className="list-disc list-inside mb-4 space-y-2">
               <li>Close tabs to feed me and earn XP</li>
-              <li>Keep tabs low (under 10) to keep me happy</li>
+              <li>Keep tabs low (under {GAME_CONFIG.tabs.safeMax}) to keep me happy</li>
               <li>Too many tabs will make me sick!</li>
             </ul>
             <p className="text-sm mb-4 text-gray-400">
@@ -98,7 +119,7 @@ function App() {
             </p>
             <button
               onClick={handleCloseWelcome}
-              className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-semibold"
+              className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-semibold transition-colors"
             >
               Let's Go!
             </button>
@@ -109,10 +130,10 @@ function App() {
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         {/* Settings */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex gap-2">
           <button
             onClick={toggleSound}
-            className="text-white bg-gray-800 bg-opacity-50 hover:bg-opacity-75 px-3 py-2 rounded"
+            className="text-white bg-gray-800 bg-opacity-50 hover:bg-opacity-75 px-3 py-2 rounded transition-colors"
             title={gameState.settings.soundEnabled ? 'Sound On' : 'Sound Off'}
           >
             {gameState.settings.soundEnabled ? '🔊' : '🔇'}
@@ -121,12 +142,21 @@ function App() {
 
         {/* Goblin */}
         <div className="mb-8">
-          <Goblin
-            level={gameState.pet.level}
-            mood={gameState.pet.mood}
-            isEating={isEating}
-          />
+          <Goblin level={gameState.pet.level} mood={gameState.pet.mood} isEating={isEating} />
         </div>
+
+        {/* Death Screen */}
+        {gameState.pet.mood === 'DEAD' && (
+          <div className="mb-4 text-center">
+            <p className="text-white mb-2">Your goblin has passed away...</p>
+            <button
+              onClick={handleRevive}
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white font-semibold transition-colors"
+            >
+              Revive Goblin
+            </button>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="bg-gray-800 bg-opacity-80 rounded-lg p-4 w-full max-w-xs text-white">
@@ -143,7 +173,9 @@ function App() {
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div
-                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  gameState.pet.health < 30 ? 'bg-red-500' : 'bg-green-500'
+                }`}
                 style={{ width: `${gameState.pet.health}%` }}
               />
             </div>
@@ -153,25 +185,47 @@ function App() {
           <div className="mb-2">
             <div className="flex justify-between text-xs mb-1">
               <span>XP</span>
-              <span>{gameState.pet.xp}/100</span>
+              <span>
+                {gameState.pet.xp}/{getXpMax()}
+              </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div
                 className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${gameState.pet.xp}%` }}
+                style={{ width: `${(gameState.pet.xp / getXpMax()) * 100}%` }}
               />
             </div>
           </div>
 
           {/* Tab Count */}
           <div className="text-center mt-4 pt-4 border-t border-gray-700">
-            <div className="text-2xl font-bold">{gameState.environment.tabCount}</div>
+            <div
+              className={`text-2xl font-bold ${
+                gameState.environment.tabCount > GAME_CONFIG.tabs.dangerMax
+                  ? 'text-red-400'
+                  : gameState.environment.tabCount > GAME_CONFIG.tabs.safeMax
+                    ? 'text-orange-400'
+                    : 'text-white'
+              }`}
+            >
+              {gameState.environment.tabCount}
+            </div>
             <div className="text-xs text-gray-400">Open Tabs</div>
           </div>
 
           {/* Mood Indicator */}
           <div className="text-center mt-2">
-            <span className="text-xs px-2 py-1 rounded bg-gray-700">
+            <span
+              className={`text-xs px-2 py-1 rounded ${
+                gameState.pet.mood === 'HAPPY'
+                  ? 'bg-green-700'
+                  : gameState.pet.mood === 'GREEDY'
+                    ? 'bg-orange-700'
+                    : gameState.pet.mood === 'CORRUPT'
+                      ? 'bg-red-700'
+                      : 'bg-gray-700'
+              }`}
+            >
               {gameState.pet.mood}
             </span>
           </div>
@@ -181,5 +235,12 @@ function App() {
   );
 }
 
-export default App;
+function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
+}
 
+export default App;

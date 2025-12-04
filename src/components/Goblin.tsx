@@ -1,10 +1,12 @@
 /**
- * Goblin sprite renderer with CSS animation
+ * Goblin sprite renderer with requestAnimationFrame
+ * Optimized for performance - pauses when hidden
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { GoblinLevel, GoblinMood } from '../lib/gameState';
 import { SPRITE_MAP, SPRITE_CELL_SIZE } from '../lib/spriteMap';
+import { GAME_CONFIG } from '../lib/config';
 
 interface GoblinProps {
   level: GoblinLevel;
@@ -16,16 +18,18 @@ export function Goblin({ level, mood, isEating = false }: GoblinProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [spriteSheet, setSpriteSheet] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef<number>(0);
+  const isVisibleRef = useRef<boolean>(true);
 
-  // Load pre-processed sprite sheet (pink already removed at build time)
+  // Load pre-processed sprite sheet
   useEffect(() => {
-    // Use chrome.runtime.getURL for extension paths
     const spriteUrl = chrome.runtime.getURL('goblin-sprite.png');
     setSpriteSheet(spriteUrl);
   }, []);
 
   // Determine which animation to play
-  const getAnimationKey = (): keyof typeof SPRITE_MAP => {
+  const getAnimationKey = useCallback((): keyof typeof SPRITE_MAP => {
     if (isEating) {
       if (level === 1) return 'BABY_EAT';
       if (level === 2) return 'TEEN_LAUGH';
@@ -40,33 +44,52 @@ export function Goblin({ level, mood, isEating = false }: GoblinProps) {
       return level === 1 ? 'BABY_IDLE' : 'TEEN_IDLE';
     }
 
-    // Default idle animations
     if (level === 1) return 'BABY_IDLE';
     if (level === 2) return 'TEEN_IDLE';
     return 'MONSTER_IDLE';
-  };
+  }, [level, mood, isEating]);
 
   const animKey = getAnimationKey();
   const sprite = SPRITE_MAP[animKey];
 
-  // Animation loop
+  // Animation loop using requestAnimationFrame
   useEffect(() => {
-    const fps = mood === 'CORRUPT' ? 15 : 8; // Faster when corrupted
-    const interval = 1000 / fps;
+    const fps = mood === 'CORRUPT' 
+      ? GAME_CONFIG.animation.corruptedFps 
+      : GAME_CONFIG.animation.normalFps;
+    const frameInterval = 1000 / fps;
 
-    const timer = setInterval(() => {
-      setCurrentFrame((prev) => (prev + 1) % sprite.frames);
-    }, interval);
+    const animate = (timestamp: number) => {
+      if (!isVisibleRef.current) {
+        // Panel is hidden, skip animation but keep RAF running
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
 
-    return () => clearInterval(timer);
+      const elapsed = timestamp - lastFrameTimeRef.current;
+
+      if (elapsed >= frameInterval) {
+        lastFrameTimeRef.current = timestamp - (elapsed % frameInterval);
+        setCurrentFrame((prev) => (prev + 1) % sprite.frames);
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    // Start animation
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [sprite.frames, mood]);
 
-  // Pause animation when not visible
+  // Pause animation when document is hidden
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Could pause animation here if needed
-      }
+      isVisibleRef.current = !document.hidden;
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -76,28 +99,40 @@ export function Goblin({ level, mood, isEating = false }: GoblinProps) {
   const spriteX = -(sprite.col + currentFrame) * SPRITE_CELL_SIZE;
   const spriteY = -sprite.row * SPRITE_CELL_SIZE;
 
+  // Add shake effect when corrupted
+  const shakeClass = mood === 'CORRUPT' ? 'animate-shake' : '';
+
   return (
     <div
       ref={containerRef}
-      className="goblin-container relative"
+      className={`goblin-container relative ${shakeClass}`}
       style={{
         width: `${SPRITE_CELL_SIZE}px`,
         height: `${SPRITE_CELL_SIZE}px`,
       }}
     >
-      <div
-        className="goblin-sprite"
-        style={{
-          width: `${SPRITE_CELL_SIZE}px`,
-          height: `${SPRITE_CELL_SIZE}px`,
-          backgroundImage: `url(${spriteSheet})`,
-          backgroundPosition: `${spriteX}px ${spriteY}px`,
-          imageRendering: 'pixelated',
-          transform: mood === 'CORRUPT' ? 'scale(1.1)' : 'scale(1)',
-          transition: 'transform 0.3s ease',
-        }}
-      />
+      {spriteSheet && (
+        <div
+          className="goblin-sprite"
+          style={{
+            width: `${SPRITE_CELL_SIZE}px`,
+            height: `${SPRITE_CELL_SIZE}px`,
+            backgroundImage: `url(${spriteSheet})`,
+            backgroundPosition: `${spriteX}px ${spriteY}px`,
+            imageRendering: 'pixelated',
+            transform: mood === 'CORRUPT' ? 'scale(1.1)' : 'scale(1)',
+            transition: 'transform 0.3s ease',
+            filter: mood === 'DEAD' ? 'grayscale(100%)' : 'none',
+          }}
+        />
+      )}
+      
+      {/* Death overlay */}
+      {mood === 'DEAD' && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-4xl">💀</span>
+        </div>
+      )}
     </div>
   );
 }
-
