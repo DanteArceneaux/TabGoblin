@@ -33,6 +33,7 @@ export interface GameSettings {
   consoleVariant: 'dmg' | 'gbc-purple' | 'gbc-teal';
   lcdPalette: 'pea-green' | 'muted-color';
   soundHintDismissed?: boolean;
+  useVectorSprites?: boolean;
 }
 
 export interface GameState {
@@ -68,6 +69,7 @@ export const DEFAULT_GAME_STATE: GameState = {
     consoleVariant: 'gbc-purple',
     lcdPalette: 'pea-green',
     soundHintDismissed: false,
+    useVectorSprites: false,
   },
 };
 

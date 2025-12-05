@@ -16,6 +16,7 @@ interface GoblinProps {
   isSleeping?: boolean;
   isReviving?: boolean;
   reaction?: 'happy' | 'sad' | 'stress' | null;
+  useVector?: boolean;
 }
 
 export function Goblin({ 
@@ -24,11 +25,13 @@ export function Goblin({
   isEating = false, 
   isSleeping = false,
   isReviving = false,
-  reaction = null 
+  reaction = null,
+  useVector = false,
 }: GoblinProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [spriteSheet, setSpriteSheet] = useState<string>('');
   const [sleepSprite, setSleepSprite] = useState<string>('');
+  const [vectorSprites, setVectorSprites] = useState<Record<string, string>>({});
   const [idleAction, setIdleAction] = useState<'bounce' | 'wave' | null>(null);
   const [zzzParticles, setZzzParticles] = useState<number[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,6 +45,22 @@ export function Goblin({
     setSpriteSheet(spriteUrl);
     const sleepUrl = chrome.runtime.getURL('goblin-sleep-baby.png');
     setSleepSprite(sleepUrl);
+
+    // Preload simple vector placeholders
+    const loadVector = async () => {
+      const entries: [string, string][] = [
+        ['BABY_IDLE', chrome.runtime.getURL('vector-sprites/baby-idle.svg')],
+        ['BABY_EAT', chrome.runtime.getURL('vector-sprites/baby-eat.svg')],
+        ['BABY_SICK', chrome.runtime.getURL('vector-sprites/baby-sick.svg')],
+        ['BABY_SLEEP', chrome.runtime.getURL('vector-sprites/baby-sleep.svg')],
+        ['TEEN_IDLE', chrome.runtime.getURL('vector-sprites/teen-idle.svg')],
+        ['MONSTER_IDLE', chrome.runtime.getURL('vector-sprites/monster-idle.svg')],
+      ];
+      const map: Record<string, string> = {};
+      entries.forEach(([k, v]) => { map[k] = v; });
+      setVectorSprites(map);
+    };
+    loadVector();
   }, []);
 
   // Determine which animation to play
@@ -70,6 +89,12 @@ export function Goblin({
 
   // Animation loop using requestAnimationFrame
   useEffect(() => {
+    if (useVector) {
+      // Static vector placeholders: no frame animation
+      setCurrentFrame(0);
+      return;
+    }
+
     const baseFps = mood === 'CORRUPT'
       ? GAME_CONFIG.animation.corruptedFps
       : GAME_CONFIG.animation.normalFps;
@@ -115,6 +140,7 @@ export function Goblin({
   // Random idle behaviors (only when HAPPY and not sleeping).
   // Baby stays steady to avoid awkward motion with limited frames.
   useEffect(() => {
+    if (useVector) return;
     if (level === 1) return;
     if (mood !== 'HAPPY' || isEating || isSleeping) return;
 
@@ -155,6 +181,18 @@ export function Goblin({
 
   const spriteX = -(sprite.col + currentFrame) * SPRITE_CELL_SIZE;
   const spriteY = -sprite.row * SPRITE_CELL_SIZE;
+
+  const vectorUrl = useVector
+    ? vectorSprites[
+        isSleeping && level === 1 ? 'BABY_SLEEP' :
+        isEating && level === 1 ? 'BABY_EAT' :
+        mood === 'GREEDY' && level === 1 ? 'BABY_IDLE' :
+        mood === 'CORRUPT' ? 'MONSTER_IDLE' :
+        level === 2 ? 'TEEN_IDLE' :
+        level === 3 ? 'MONSTER_IDLE' :
+        'BABY_IDLE'
+      ]
+    : undefined;
 
   // Build CSS classes based on state
   const getContainerClasses = () => {
@@ -197,8 +235,20 @@ export function Goblin({
         height: `${SPRITE_CELL_SIZE}px`,
       }}
     >
-      {/* Baby sleeping uses dedicated sprite (no rotation) */}
-      {isSleeping && level === 1 && sleepSprite ? (
+      {/* Vector mode: static SVG placeholders */}
+      {useVector && vectorUrl ? (
+        <img
+          src={vectorUrl}
+          alt="Goblin vector"
+          className="goblin-sprite"
+          style={{
+            width: `${SPRITE_CELL_SIZE}px`,
+            height: `${SPRITE_CELL_SIZE}px`,
+            filter: getSpriteFilter(),
+            transition: 'filter 0.4s ease',
+          }}
+        />
+      ) : isSleeping && level === 1 && sleepSprite ? (
         <img
           src={sleepSprite}
           alt="Sleeping baby goblin"

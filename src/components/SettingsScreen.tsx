@@ -102,6 +102,23 @@ function SettingsScreenComponent({ gameState, onClose, onUpdate }: SettingsScree
           <p className="text-[8px] mt-1 opacity-75">AUDIO CUES & CHIMES</p>
         </div>
 
+        {/* Vector sprites toggle */}
+        <div>
+          <div className="flex justify-between items-center">
+            <span>VECTOR MODE</span>
+            <button
+              onClick={() => onUpdate({
+                settings: { ...gameState.settings, useVectorSprites: !gameState.settings.useVectorSprites }
+              })}
+              className="bg-[#306230] px-2 py-1 border-2 border-[#9bbc0f] active:translate-y-0.5"
+              aria-pressed={!!gameState.settings.useVectorSprites}
+            >
+              {gameState.settings.useVectorSprites ? 'ON' : 'OFF'}
+            </button>
+          </div>
+          <p className="text-[8px] mt-1 opacity-75">USE SIMPLE VECTOR PLACEHOLDERS</p>
+        </div>
+
         {/* Focus Mode */}
         <div>
           <div className="flex justify-between items-center">

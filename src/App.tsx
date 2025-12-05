@@ -411,6 +411,7 @@ function AppContent() {
                 isSleeping={isSleeping && gameState.pet.mood === 'HAPPY'}
                 isReviving={isReviving}
                 reaction={reaction}
+                useVector={!!gameState.settings.useVectorSprites}
               />
             </div>
 
