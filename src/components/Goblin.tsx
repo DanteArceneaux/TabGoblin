@@ -70,9 +70,11 @@ export function Goblin({
 
   // Animation loop using requestAnimationFrame
   useEffect(() => {
-    const fps = mood === 'CORRUPT' 
-      ? GAME_CONFIG.animation.corruptedFps 
+    const baseFps = mood === 'CORRUPT'
+      ? GAME_CONFIG.animation.corruptedFps
       : GAME_CONFIG.animation.normalFps;
+    // Baby frames can look jittery; slow them slightly for smoother motion
+    const fps = level === 1 ? Math.max(4, Math.round(baseFps * 0.75)) : baseFps;
     const frameInterval = 1000 / fps;
 
     const animate = (timestamp: number) => {
@@ -110,8 +112,10 @@ export function Goblin({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // Random idle behaviors (only when HAPPY and not sleeping)
+  // Random idle behaviors (only when HAPPY and not sleeping).
+  // Baby stays steady to avoid awkward motion with limited frames.
   useEffect(() => {
+    if (level === 1) return;
     if (mood !== 'HAPPY' || isEating || isSleeping) return;
 
     const triggerIdleBehavior = () => {
